@@ -29,6 +29,19 @@ class AppError(Exception):
         super().__init__(message)
 
 
+class UnauthorizedError(AppError):
+    """Raised when the caller isn't authenticated, or their credentials/token
+    are missing, invalid, expired, or revoked. Maps to HTTP 401.
+    """
+
+    status_code = 401
+
+    def __init__(
+        self, message: str = "Not authenticated", errors: list[dict[str, Any]] | None = None
+    ) -> None:
+        super().__init__(message, errors)
+
+
 class NotFoundError(AppError):
     """Raised when a requested resource does not exist. Maps to HTTP 404."""
 

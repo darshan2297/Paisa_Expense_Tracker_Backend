@@ -12,12 +12,10 @@ from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from typing import Any
 
+import bcrypt
 import jwt
-from passlib.context import CryptContext
 
 from app.core.config import get_settings
-
-_pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 JWT_ALGORITHM = "HS256"
 
@@ -28,15 +26,20 @@ class TokenType(StrEnum):
 
 
 def hash_password(plain_password: str) -> str:
-    """Hash a plaintext password for storage. Never store plaintext passwords."""
-    # passlib ships no type stubs, so its return type is `Any` to the type
-    # checker even though it's always a `str` at runtime - cast explicitly.
-    return str(_pwd_context.hash(plain_password))
+    """Hash a plaintext password for storage. Never store plaintext passwords.
+
+    Uses the `bcrypt` package directly rather than passlib - passlib is
+    unmaintained (no release since 2020) and its bcrypt backend breaks on
+    bcrypt>=4.1 (which removed the `__about__` submodule passlib probes for
+    version detection). bcrypt's own `hashpw`/`checkpw` is a small, stable,
+    actively maintained API and needs no wrapper.
+    """
+    return bcrypt.hashpw(plain_password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Check a plaintext password against a previously hashed value."""
-    return bool(_pwd_context.verify(plain_password, hashed_password))
+    return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
 
 
 def _create_token(

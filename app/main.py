@@ -12,7 +12,6 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from slowapi.errors import RateLimitExceeded
-from slowapi.middleware import SlowAPIMiddleware
 from starlette.middleware.cors import CORSMiddleware
 
 from app import scheduler
@@ -44,9 +43,26 @@ def create_app() -> FastAPI:
     )
 
     # --- Rate limiting (slowapi) setup ---
-    # `app.state.limiter` + the RateLimitExceeded handler are required by
-    # slowapi regardless of middleware; the middleware itself just applies
-    # `default_limits` automatically to routes that don't specify their own.
+    # `app.state.limiter` + the RateLimitExceeded handler are what every
+    # `@strict_limit()`/`@default_limit()`-decorated route relies on - both
+    # are required regardless of whether `SlowAPIMiddleware` is installed.
+    #
+    # `SlowAPIMiddleware` is deliberately NOT installed: it subclasses
+    # Starlette's `BaseHTTPMiddleware`, which runs the downstream app in a
+    # separate anyio task from the one the middleware runs in. That breaks
+    # asyncpg/SQLAlchemy-async connections for any route it wraps ("Future
+    # attached to a different loop") - i.e. it would crash every real
+    # DB-touching endpoint. See app/middleware/request_id.py's docstring for
+    # the full explanation (our own custom middlewares hit the same issue
+    # and were rewritten as pure ASGI to fix it - this third-party one can't
+    # be rewritten the same way).
+    #
+    # The only capability this costs us is *implicit* default-limit
+    # enforcement on routes with no rate-limit decorator, and `X-RateLimit-*`
+    # response headers on successful (under-limit) requests. Every route
+    # that should be rate limited must explicitly decorate with
+    # `@strict_limit()` or `@default_limit()` (see app/middleware/rate_limit.py)
+    # - see docs/CODING_STANDARDS.md.
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
@@ -63,10 +79,11 @@ def create_app() -> FastAPI:
     # the OUTERMOST layer (first to see the request, last to see the
     # response). We want, from outermost to innermost:
     #
-    #     CORS -> RequestId -> RateLimit -> ResponseEnvelope -> ErrorHandling
+    #     CORS -> RequestId -> ResponseEnvelope -> ErrorHandling
     #
     # so we must call `add_middleware()` in the OPPOSITE order: innermost
-    # first, outermost last.
+    # first, outermost last. (No RateLimit layer here - see the comment on
+    # `app.state.limiter` above for why rate limiting is decorator-only.)
     #
     #   1. ErrorHandlingMiddleware - innermost custom layer; a safety net
     #      that catches anything raised by the route/routing that isn't
@@ -76,18 +93,15 @@ def create_app() -> FastAPI:
     #      (error responses are already enveloped by the exception handlers
     #      and are detected/passed through unchanged) but inside everything
     #      else.
-    #   3. SlowAPIMiddleware - rejects over-limit requests before they reach
-    #      envelope/error wrapping.
-    #   4. RequestIdMiddleware - must run early enough that the request id
+    #   3. RequestIdMiddleware - must run early enough that the request id
     #      exists for every downstream layer (logging, error handling), so
-    #      it sits outside rate limiting/envelope/error handling.
-    #   5. CORSMiddleware - MUST be outermost so preflight `OPTIONS`
+    #      it sits outside envelope/error handling.
+    #   4. CORSMiddleware - MUST be outermost so preflight `OPTIONS`
     #      requests are answered immediately and never reach any other
-    #      middleware (auth, rate limiting, etc. would otherwise incorrectly
-    #      apply to preflight requests).
+    #      middleware (auth, etc. would otherwise incorrectly apply to
+    #      preflight requests).
     app.add_middleware(ErrorHandlingMiddleware)
     app.add_middleware(ResponseEnvelopeMiddleware)
-    app.add_middleware(SlowAPIMiddleware)
     app.add_middleware(RequestIdMiddleware)
     app.add_middleware(
         CORSMiddleware,

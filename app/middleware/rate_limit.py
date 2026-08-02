@@ -5,11 +5,26 @@ single-process in-memory limiter is sufficient for now. If the app is ever
 scaled to multiple processes/instances, this limiter becomes per-instance
 (not globally shared) - revisit with a shared backend at that point.
 
-`limiter` is registered on `app.state.limiter` and its middleware added in
-`app.main.create_app()`. Individual routes opt into the default limit
-automatically once `SlowAPIMiddleware` is installed; `strict_limit` is
-available for endpoints that need a tighter bound (e.g. login/register,
-once those exist in a later phase).
+`limiter` is registered on `app.state.limiter` in `app.main.create_app()`.
+There is deliberately NO `SlowAPIMiddleware` installed (see the detailed
+comment in `app.main.create_app()`: it subclasses `BaseHTTPMiddleware`,
+which breaks async DB connections for any route it wraps). This means
+routes do NOT get rate-limited automatically - every route that should be
+rate limited must explicitly use one of the decorators below. There is no
+implicit default; an un-decorated route is not rate limited at all.
+
+    from app.middleware.rate_limit import default_limit, strict_limit
+
+    @router.get("/transactions")
+    @default_limit()
+    async def list_transactions(request: Request, ...): ...
+
+    @router.post("/auth/login")
+    @strict_limit()
+    async def login(request: Request, ...): ...
+
+Note: slowapi requires the decorated endpoint to accept a `request: Request`
+parameter so it can inspect the client key.
 """
 
 from collections.abc import Callable
@@ -27,19 +42,17 @@ settings = get_settings()
 
 limiter = Limiter(key_func=get_remote_address, default_limits=[settings.RATE_LIMIT_DEFAULT])
 
-# Stricter preset for sensitive, auth-style endpoints (login, register,
-# password reset) to slow down brute-force/credential-stuffing attempts.
-# Usage once those routes exist:
-#
-#     from app.middleware.rate_limit import limiter, strict_limit
-#
-#     @router.post("/login")
-#     @strict_limit()
-#     async def login(request: Request, ...): ...
-#
-# Note: slowapi requires the decorated endpoint to accept a `request: Request`
-# parameter so it can inspect the client key.
+# Stricter preset for sensitive, auth-style endpoints (login, refresh,
+# change-password) to slow down brute-force/credential-stuffing attempts.
 STRICT_RATE_LIMIT = "5/minute"
+
+
+def default_limit() -> Callable:  # type: ignore[type-arg]
+    """Decorator applying the project's standard rate limit
+    (`Settings.RATE_LIMIT_DEFAULT`). Apply to every route that isn't
+    sensitive enough to need `strict_limit()` instead - see module docstring.
+    """
+    return limiter.limit(settings.RATE_LIMIT_DEFAULT)
 
 
 def strict_limit() -> Callable:  # type: ignore[type-arg]

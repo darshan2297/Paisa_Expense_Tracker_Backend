@@ -2,8 +2,14 @@
 
 A single module-level engine and sessionmaker are created lazily and reused
 for the lifetime of the process. `get_session()` is a FastAPI dependency
-that yields an `AsyncSession` and guarantees it is closed (and any open
-transaction rolled back on error) once the request finishes.
+that yields an `AsyncSession`, commits once the route handler returns
+successfully, and rolls back (then re-raises) if anything raised - the
+session is always closed once the request finishes either way.
+
+Service functions should call `session.flush()`, not `session.commit()` -
+this dependency owns the commit boundary for the whole request, so a
+service calling `commit()` itself would end the transaction early and
+break atomicity for any other service calls made later in the same request.
 """
 
 from collections.abc import AsyncGenerator
@@ -54,14 +60,15 @@ def get_sessionmaker() -> async_sessionmaker[AsyncSession]:
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
     """FastAPI dependency yielding a request-scoped `AsyncSession`.
 
-    Usage: `session: AsyncSession = Depends(get_session)`.
-    Rolls back automatically if an exception propagates out of the route,
-    and always closes the session at the end of the request.
+    Usage: `session: AsyncSession = Depends(get_session)`. Commits on
+    successful completion of the route; rolls back and re-raises on any
+    exception. Always closes the session at the end of the request.
     """
     session_factory = get_sessionmaker()
     async with session_factory() as session:
         try:
             yield session
+            await session.commit()
         except Exception:
             await session.rollback()
             raise

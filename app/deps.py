@@ -3,6 +3,7 @@ path (`from app.deps import ...`) that feature modules can rely on without
 needing to know which `app.core.*` submodule something actually lives in.
 """
 
+from app.api.v1.auth.deps import CurrentUser, get_current_user
 from app.core.database import get_session
 from app.core.pagination import PageParams, PageParamsDep, page_params_dependency
 
@@ -11,4 +12,6 @@ __all__ = [
     "PageParams",
     "PageParamsDep",
     "page_params_dependency",
+    "CurrentUser",
+    "get_current_user",
 ]

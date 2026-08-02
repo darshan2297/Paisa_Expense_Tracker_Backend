@@ -67,6 +67,12 @@ class Settings(BaseSettings):
     # slowapi limit-string syntax, e.g. "100/minute"
     RATE_LIMIT_DEFAULT: str = "100/minute"
 
+    # --- Seed (scripts/seed.py only - there is no public registration
+    # endpoint; the single user is created by this script) ---
+    SEED_USER_EMAIL: str | None = None
+    SEED_USER_PASSWORD: str | None = None
+    SEED_USER_NAME: str | None = None
+
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def _split_csv_origins(cls, value: object) -> object:
