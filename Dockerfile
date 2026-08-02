@@ -27,14 +27,12 @@ WORKDIR /app
 
 # Copy only dependency manifests first so this layer is cache-friendly -
 # dependency installation is only re-run when these files actually change.
-COPY pyproject.toml ./
-# poetry.lock is intentionally not committed yet (see project notes) - if/when
-# one is generated and committed, uncomment the line below for reproducible,
-# pinned installs:
-# COPY poetry.lock ./
+COPY pyproject.toml poetry.lock ./
 
-# Install only production dependencies (no dev/test tooling) into ./.venv.
-RUN poetry install --no-root --only main --no-ansi
+# --sync ensures the venv exactly matches the lock file (no stray packages
+# from a stale cache layer). Install only production dependencies (no
+# dev/test tooling) into ./.venv.
+RUN poetry install --no-root --only main --sync --no-ansi
 
 # ---------------------------------------------------------------------------
 # Stage 2: final runtime image - slim, no build toolchain, non-root user.
