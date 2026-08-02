@@ -26,8 +26,9 @@ async def client() -> AsyncGenerator[AsyncClient, None]:
 
 @pytest.fixture
 async def seeded_user_id() -> str:
-    """Create a user directly via the repository (bypassing the API, since
-    there is no public registration endpoint) and return its id as a str.
+    """Create a user directly via the repository (bypassing the API - see
+    test_register.py for the one-time POST /auth/register endpoint itself)
+    and return its id as a str.
     """
     session_factory = get_sessionmaker()
     async with session_factory() as session:

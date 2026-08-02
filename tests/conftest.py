@@ -7,6 +7,10 @@ expected to have already been run against that database before the test
 suite starts (CI/local docs both do this explicitly).
 """
 
+import os
+
+os.environ.setdefault("ENVIRONMENT", "test")
+
 from collections.abc import AsyncGenerator
 
 import pytest
@@ -51,8 +55,11 @@ async def _clean_database() -> AsyncGenerator[None, None]:
     """
     yield
     engine = get_engine()
+    skip_tables = {"categories"}  # global seeded taxonomy — never user-owned rows
     async with engine.begin() as conn:
         for table in reversed(Base.metadata.sorted_tables):
+            if table.name in skip_tables:
+                continue
             await conn.execute(text(f'TRUNCATE TABLE "{table.name}" RESTART IDENTITY CASCADE'))
     await engine.dispose()
     get_engine.cache_clear()

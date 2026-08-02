@@ -20,6 +20,7 @@ from app.api.v1.auth import repository
 from app.core.config import get_settings
 from app.core.database import get_sessionmaker
 from app.core.security import hash_password
+from app.deps import ensure_default_account
 
 
 async def _seed() -> int:
@@ -39,12 +40,13 @@ async def _seed() -> int:
             print(f"User {settings.SEED_USER_EMAIL} already exists - nothing to do.")
             return 0
 
-        await repository.create_user(
+        user = await repository.create_user(
             session,
             email=settings.SEED_USER_EMAIL,
             hashed_password=hash_password(settings.SEED_USER_PASSWORD),
             name=settings.SEED_USER_NAME,
         )
+        await ensure_default_account(session, user.id)
         await session.commit()
 
     print(f"Created user {settings.SEED_USER_EMAIL}.")

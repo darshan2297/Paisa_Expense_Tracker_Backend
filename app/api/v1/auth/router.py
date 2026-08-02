@@ -12,7 +12,7 @@ forbids.
 from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.auth import service
+from app.api.v1.auth import repository, service
 from app.api.v1.auth.deps import CurrentUser
 from app.api.v1.auth.schemas import (
     ChangePasswordRequest,
@@ -20,6 +20,7 @@ from app.api.v1.auth.schemas import (
     ProfileResponse,
     ProfileUpdateRequest,
     RefreshRequest,
+    RegisterRequest,
     TokenPairResponse,
 )
 from app.core.database import get_session
@@ -27,6 +28,32 @@ from app.middleware.rate_limit import default_limit, strict_limit
 
 auth_router = APIRouter(prefix="/auth")
 profile_router = APIRouter(prefix="/profile")
+
+
+@auth_router.get(
+    "/registration-open",
+    summary="Whether one-time bootstrap registration is still available",
+)
+@default_limit()
+async def registration_open(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+) -> dict[str, bool]:
+    """Lets the frontend decide whether to show the registration screen at
+    all, without needing to attempt a register and parse a 409. Public
+    (no auth) - this is the whole point of a first-run check.
+    """
+    return {"open": await repository.count_users(session) == 0}
+
+
+@auth_router.post("/register", summary="One-time bootstrap account creation")
+@strict_limit()
+async def register(
+    request: Request,
+    payload: RegisterRequest,
+    session: AsyncSession = Depends(get_session),
+) -> TokenPairResponse:
+    return await service.register(session, payload.email, payload.password, payload.name)
 
 
 @auth_router.post("/login", summary="Log in with email + password")

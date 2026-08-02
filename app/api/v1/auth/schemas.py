@@ -11,6 +11,16 @@ class LoginRequest(BaseModel):
     password: str = Field(min_length=1)
 
 
+class RegisterRequest(BaseModel):
+    """One-time bootstrap registration - see service.register(). There is no
+    ongoing public signup; this succeeds only while the `users` table is empty.
+    """
+
+    email: EmailStr
+    password: str = Field(min_length=8)
+    name: str = Field(min_length=1)
+
+
 class RefreshRequest(BaseModel):
     refresh_token: str
 

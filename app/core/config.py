@@ -63,6 +63,14 @@ class Settings(BaseSettings):
         default_factory=lambda: ["http://localhost:3000"]
     )
 
+    # --- Redis / cache ---
+    REDIS_URL: str = "redis://localhost:6379/0"
+    CACHE_DEFAULT_TTL_SECONDS: int = 300
+
+    # --- Celery ---
+    CELERY_BROKER_URL: str = "redis://localhost:6379/1"
+    CELERY_RESULT_BACKEND: str = "redis://localhost:6379/2"
+
     # --- Rate limiting ---
     # slowapi limit-string syntax, e.g. "100/minute"
     RATE_LIMIT_DEFAULT: str = "100/minute"

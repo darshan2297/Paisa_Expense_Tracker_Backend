@@ -28,6 +28,11 @@ from app.core.response import success_envelope
 
 _ENVELOPE_MARKER_KEYS = {"success", "status_code", "data", "message", "errors"}
 
+# FastAPI serves its OpenAPI schema at this path; Swagger/ReDoc fetch it
+# directly and require the raw spec (top-level `openapi` field), not our
+# API envelope.
+_UNENVELOPED_PATHS = frozenset({"/openapi.json", "/", "/docs", "/redoc"})
+
 
 def _header_value(headers: list[tuple[bytes, bytes]], name: bytes) -> bytes:
     for key, value in headers:
@@ -46,6 +51,10 @@ class ResponseEnvelopeMiddleware:
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        if scope.get("path") in _UNENVELOPED_PATHS:
             await self.app(scope, receive, send)
             return
 

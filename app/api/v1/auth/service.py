@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.auth import repository
 from app.api.v1.auth.models import User
 from app.api.v1.auth.schemas import ProfileResponse, ProfileUpdateRequest, TokenPairResponse
-from app.core.exceptions import UnauthorizedError
+from app.core.exceptions import ConflictError, UnauthorizedError
 from app.core.security import (
     TokenType,
     create_access_token,
@@ -19,6 +19,7 @@ from app.core.security import (
     hash_password,
     verify_password,
 )
+from app.deps import ensure_default_account
 
 
 def _issue_token_pair(user: User) -> TokenPairResponse:
@@ -31,6 +32,36 @@ def _issue_token_pair(user: User) -> TokenPairResponse:
         access_token=create_access_token(str(user.id), extra_claims),
         refresh_token=create_refresh_token(str(user.id), extra_claims),
     )
+
+
+async def register(
+    session: AsyncSession, email: str, password: str, name: str
+) -> TokenPairResponse:
+    """One-time bootstrap account creation. This app has no ongoing public
+    signup (see docs/DEVELOPMENT_GUIDE.md) - this succeeds exactly once,
+    while the `users` table is empty, and permanently refuses afterward.
+
+    Known, accepted limitation: the empty-check and the insert are not in a
+    single atomic operation (no advisory lock), so two truly concurrent
+    bootstrap requests could theoretically both pass the check. Given this
+    only ever matters in the few seconds between deploying the app and
+    creating its one real account - before any traffic reaches it - that
+    race isn't worth the added complexity of a lock for a single-user app.
+    """
+    if await repository.count_users(session) > 0:
+        raise ConflictError("Registration is closed - an account already exists")
+
+    user = await repository.create_user(
+        session,
+        email=email,
+        hashed_password=hash_password(password),
+        name=name,
+    )
+    # Every user needs an account to attach transactions to (F2/F3) - routed
+    # through app.deps rather than importing app.api.v1.accounts directly,
+    # per docs/DEVELOPER_PHILOSOPHY.md §2.2.
+    await ensure_default_account(session, user.id)
+    return _issue_token_pair(user)
 
 
 async def login(session: AsyncSession, email: str, password: str) -> TokenPairResponse:

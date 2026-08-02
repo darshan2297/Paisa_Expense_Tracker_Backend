@@ -15,10 +15,10 @@ cp .env.example .env
 # edit .env: at minimum set a real JWT_SECRET_KEY; DATABASE_URL default matches
 # the workspace docker-compose Postgres (paisa/paisa@localhost:5432/paisa)
 poetry run alembic upgrade head
-poetry run uvicorn app.main:app --reload
+poetry run uvicorn app.main:app --reload --port 8001
 ```
 
-Health check: `curl http://localhost:8000/api/v1/health` should return the standard
+Health check: `curl http://localhost:8001/api/v1/health` should return the standard
 envelope with `"status": "ok"`.
 
 ## Option B — Full stack via Docker Compose

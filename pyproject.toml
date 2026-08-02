@@ -6,7 +6,7 @@ authors = ["Darshan <darshan.vankawala@viitor.cloud>"]
 package-mode = false
 
 [tool.poetry.dependencies]
-python = "^3.13"
+python = "^3.12"
 fastapi = "^0.115.0"
 uvicorn = { extras = ["standard"], version = "^0.32.0" }
 sqlalchemy = { extras = ["asyncio"], version = "^2.0.36" }
@@ -16,7 +16,9 @@ pydantic = "^2.9.2"
 pydantic-settings = "^2.6.1"
 pyjwt = "^2.9.0"
 bcrypt = ">=4.0,<6.0"
-apscheduler = "^3.10.4"
+redis = "^5.2.0"
+celery = { extras = ["redis"], version = "^5.4.0" }
+jinja2 = "^3.1.4"
 slowapi = "^0.1.9"
 python-multipart = "^0.0.12"
 email-validator = "^2.2.0"
@@ -37,7 +39,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.black]
 line-length = 100
-target-version = ["py313"]
+target-version = ["py312"]
 
 [tool.isort]
 profile = "black"
@@ -45,7 +47,7 @@ line_length = 100
 
 [tool.ruff]
 line-length = 100
-target-version = "py313"
+target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "W", "UP", "B"]
@@ -65,7 +67,7 @@ ignore = ["E501", "UP043", "UP046", "UP047"]
 extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.Header", "fastapi.Body"]
 
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.12"
 plugins = ["pydantic.mypy"]
 strict = true
 warn_return_any = true
@@ -79,7 +81,7 @@ exclude = ["alembic/"]
 # modules rather than weakening `strict` globally. (bcrypt ships its own
 # py.typed marker, so it needs no override.)
 [[tool.mypy.overrides]]
-module = ["apscheduler.*", "slowapi.*"]
+module = ["slowapi.*", "celery.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
