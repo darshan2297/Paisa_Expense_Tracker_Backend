@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Tooling caches
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Poetry
+poetry.lock.bak
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# Alembic (keep versions dir tracked, ignore nothing special here for now)

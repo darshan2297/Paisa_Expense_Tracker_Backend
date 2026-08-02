@@ -1,0 +1,79 @@
+[tool.poetry]
+name = "paisa-backend"
+version = "0.1.0"
+description = "Paisa personal finance tracker - backend API"
+authors = ["Darshan <darshan.vankawala@viitor.cloud>"]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.13"
+fastapi = "^0.115.0"
+uvicorn = { extras = ["standard"], version = "^0.32.0" }
+sqlalchemy = { extras = ["asyncio"], version = "^2.0.36" }
+asyncpg = "^0.30.0"
+alembic = "^1.14.0"
+pydantic = "^2.9.2"
+pydantic-settings = "^2.6.1"
+pyjwt = "^2.9.0"
+passlib = { extras = ["bcrypt"], version = "^1.7.4" }
+apscheduler = "^3.10.4"
+slowapi = "^0.1.9"
+python-multipart = "^0.0.12"
+email-validator = "^2.2.0"
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.10.0"
+ruff = "^0.7.4"
+isort = "^5.13.2"
+mypy = "^1.13.0"
+pytest = "^8.3.3"
+pytest-asyncio = "^0.24.0"
+httpx = "^0.27.2"
+pre-commit = "^4.0.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 100
+target-version = ["py313"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B"]
+# E501: line length is enforced by black, not worth duplicating here.
+# UP043/UP046/UP047: these push PEP 695 generics (`class Foo[T]`, `def f[T](...)`,
+# `Generator[X]` with implicit default) which require Python 3.12+ syntax at
+# parse time. We deliberately keep the classic `TypeVar`/`Generic[T]` style so
+# the codebase stays parseable on slightly older 3.x toolchains during local
+# development, even though the target runtime is 3.13.
+ignore = ["E501", "UP043", "UP046", "UP047"]
+
+[tool.mypy]
+python_version = "3.13"
+plugins = ["pydantic.mypy"]
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+exclude = ["alembic/"]
+
+# Third-party packages below ship no inline type hints and no stubs on PyPI
+# (types-apscheduler/types-passlib etc. are either unmaintained or don't
+# exist for the versions pinned here) - silence the import-untyped noise for
+# just these modules rather than weakening `strict` globally.
+[[tool.mypy.overrides]]
+module = ["apscheduler.*", "passlib.*", "slowapi.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
