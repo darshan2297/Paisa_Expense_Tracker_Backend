@@ -83,10 +83,14 @@ async def list_bills(
         year, mon = (int(p) for p in month.split("-"))
         start = dt.date(year, mon, 1)
         end = dt.date(year, mon, calendar.monthrange(year, mon)[1])
+        # Always keep unpaid bills (incl. overdue from prior months) so the
+        # Bills screen matches dashboard reminder_count; month only scopes paid.
         responses = [
             r
             for r in responses
-            if start <= r.due_date <= end or (r.paid_on is not None and start <= r.paid_on <= end)
+            if r.paid_on is None
+            or start <= r.due_date <= end
+            or (r.paid_on is not None and start <= r.paid_on <= end)
         ]
     return sorted(responses, key=lambda r: (r.paid_on is not None, r.due_date))
 
