@@ -157,3 +157,61 @@ async def run_bill_rollover() -> int:
             total += await bills_service.rollover_paid_bills(session, user.id)
         await session.commit()
     return total
+
+
+async def run_policy_reminders() -> int:
+    from app.api.v1.policies.models import Policy
+
+    today = dt.date.today()
+    sent = 0
+    factory = _session_factory()
+
+    async with factory() as session:
+        users = list((await session.execute(select(User).where(User.deleted_at.is_(None)))).scalars())
+        for user in users:
+            budget = (
+                await session.execute(
+                    select(BudgetSettings).where(
+                        BudgetSettings.user_id == user.id, BudgetSettings.deleted_at.is_(None)
+                    )
+                )
+            ).scalar_one_or_none()
+            lead_days = budget.reminder_lead_days if budget else 30
+
+            policies = list(
+                (
+                    await session.execute(
+                        select(Policy).where(Policy.user_id == user.id, Policy.deleted_at.is_(None))
+                    )
+                ).scalars()
+            )
+            for policy in policies:
+                days_until = (policy.renewal_date - today).days
+                if days_until < 0 or days_until > lead_days:
+                    continue
+                key = f"{REMINDER_KEY_PREFIX}policy:{policy.id}:{policy.renewal_date.isoformat()}"
+                if await _already_sent(key):
+                    continue
+                logger.info(
+                    "policy renewal reminder queued",
+                    extra={"user_id": str(user.id), "policy_id": str(policy.id)},
+                )
+                await _mark_sent(key)
+                sent += 1
+        await session.commit()
+    return sent
+
+
+async def run_net_worth_snapshots() -> int:
+    from app.api.v1.net_worth import service as net_worth_service
+
+    count = 0
+    factory = _session_factory()
+
+    async with factory() as session:
+        users = list((await session.execute(select(User).where(User.deleted_at.is_(None)))).scalars())
+        for user in users:
+            await net_worth_service.create_snapshot(session, user.id)
+            count += 1
+        await session.commit()
+    return count

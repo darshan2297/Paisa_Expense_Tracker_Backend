@@ -7,9 +7,11 @@ layer as a plain `cat_by_id` dict, rather than the service layer importing
 `categories` itself - see `transactions.service`'s module docstring.
 """
 
+import mimetypes
 import uuid
 
-from fastapi import APIRouter, Depends, Query, Request, Response
+from fastapi import APIRouter, Depends, File, Query, Request, Response, UploadFile
+from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.transactions import service
@@ -18,6 +20,7 @@ from app.api.v1.transactions.schemas import (
     TransactionListResponse,
     TransactionResponse,
     TransactionsSummaryResponse,
+    TransactionUpdateRequest,
 )
 from app.deps import CurrentUser, DefaultAccountId, PageParamsDep, get_session, list_categories
 from app.middleware.rate_limit import default_limit
@@ -49,11 +52,14 @@ async def get_summary(
     request: Request,
     current_user: CurrentUser,
     month: str = Query(pattern=_MONTH_PATTERN, description='"YYYY-MM"'),
+    card_only: bool = Query(
+        default=False, description="Scope category_breakdown to card-linked spend only"
+    ),
     session: AsyncSession = Depends(get_session),
 ) -> TransactionsSummaryResponse:
     categories = await list_categories(session)
     cat_by_id = {c.id: c for c in categories}
-    return await service.get_summary(session, current_user.id, month, cat_by_id)
+    return await service.get_summary(session, current_user.id, month, cat_by_id, card_only)
 
 
 @transactions_router.post("", status_code=201, summary="Create a transaction")
@@ -70,6 +76,22 @@ async def create_transaction(
     return await service.create_transaction(session, current_user.id, account_id, payload, cat_by_id)
 
 
+@transactions_router.patch("/{transaction_id}", summary="Update a transaction")
+@default_limit()
+async def update_transaction(
+    request: Request,
+    transaction_id: uuid.UUID,
+    payload: TransactionUpdateRequest,
+    current_user: CurrentUser,
+    session: AsyncSession = Depends(get_session),
+) -> TransactionResponse:
+    categories = await list_categories(session)
+    cat_by_id = {c.id: c for c in categories}
+    return await service.update_transaction(
+        session, current_user.id, transaction_id, payload, cat_by_id
+    )
+
+
 @transactions_router.delete("/{transaction_id}", status_code=204, summary="Delete a transaction")
 @default_limit()
 async def delete_transaction(
@@ -80,3 +102,41 @@ async def delete_transaction(
 ) -> Response:
     await service.delete_transaction(session, current_user.id, transaction_id)
     return Response(status_code=204)
+
+
+@transactions_router.post(
+    "/{transaction_id}/receipt",
+    summary="Attach a receipt or payment slip image",
+)
+@default_limit()
+async def upload_receipt(
+    request: Request,
+    transaction_id: uuid.UUID,
+    current_user: CurrentUser,
+    file: UploadFile = File(...),
+    session: AsyncSession = Depends(get_session),
+) -> TransactionResponse:
+    categories = await list_categories(session)
+    cat_by_id = {c.id: c for c in categories}
+    return await service.attach_receipt(
+        session, current_user.id, transaction_id, file, cat_by_id
+    )
+
+
+@transactions_router.get(
+    "/{transaction_id}/receipt",
+    summary="Download the attached receipt image",
+)
+@default_limit()
+async def download_receipt(
+    request: Request,
+    transaction_id: uuid.UUID,
+    current_user: CurrentUser,
+    session: AsyncSession = Depends(get_session),
+) -> FileResponse:
+    transaction = await service.get_transaction_for_receipt(
+        session, current_user.id, transaction_id
+    )
+    path = service.receipt_file_path(transaction)
+    media_type = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+    return FileResponse(path, media_type=media_type, filename=path.name)

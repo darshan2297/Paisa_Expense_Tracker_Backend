@@ -38,5 +38,9 @@ celery_app.conf.update(
             "task": "app.worker.tasks.reminders.process_bill_rollover",
             "schedule": crontab(hour=0, minute=30),
         },
+        "net-worth-snapshot-monthly": {
+            "task": "app.worker.tasks.reminders.process_net_worth_snapshots",
+            "schedule": crontab(day_of_month=1, hour=0, minute=0),
+        },
     },
 )

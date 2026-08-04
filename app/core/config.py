@@ -75,6 +75,10 @@ class Settings(BaseSettings):
     # slowapi limit-string syntax, e.g. "100/minute"
     RATE_LIMIT_DEFAULT: str = "100/minute"
 
+    # --- Local file storage (receipt slips, backups later) ---
+    # Relative to the backend working directory, or an absolute path.
+    STORAGE_DIR: str = "storage"
+
     # --- Seed (scripts/seed.py only - there is no public registration
     # endpoint; the single user is created by this script) ---
     SEED_USER_EMAIL: str | None = None

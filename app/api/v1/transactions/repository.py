@@ -115,19 +115,44 @@ async def sum_by_type(session: AsyncSession, user_id: uuid.UUID | str, month: st
     return {row[0]: Decimal(row[1]) for row in rows}
 
 
-async def sum_expense_by_category(
-    session: AsyncSession, user_id: uuid.UUID | str, month: str
-) -> list[tuple[uuid.UUID, Decimal]]:
-    start, end = month_bounds(month)
+async def sum_by_type_all_time(session: AsyncSession, user_id: uuid.UUID | str) -> dict[str, Decimal]:
+    """Same as `sum_by_type` but with no date filter - the all-time
+    income/expense totals a net-cash figure needs (see net_worth service),
+    as opposed to `sum_by_type`'s single-month scope used by the monthly
+    summary screens.
+    """
     stmt = (
-        select(Transaction.category_id, func.sum(Transaction.amount))
+        select(Transaction.type, func.coalesce(func.sum(Transaction.amount), 0))
         .where(
             Transaction.user_id == user_id,
             Transaction.deleted_at.is_(None),
-            Transaction.type == TransactionType.EXPENSE.value,
-            Transaction.date >= start,
-            Transaction.date <= end,
         )
+        .group_by(Transaction.type)
+    )
+    rows = (await session.execute(stmt)).all()
+    return {row[0]: Decimal(row[1]) for row in rows}
+
+
+async def sum_expense_by_category(
+    session: AsyncSession, user_id: uuid.UUID | str, month: str, card_only: bool = False
+) -> list[tuple[uuid.UUID, Decimal]]:
+    start, end = month_bounds(month)
+    conditions = [
+        Transaction.user_id == user_id,
+        Transaction.deleted_at.is_(None),
+        Transaction.type == TransactionType.EXPENSE.value,
+        Transaction.date >= start,
+        Transaction.date <= end,
+    ]
+    if card_only:
+        # "Category spending on cards" must reflect only spend actually made
+        # on a credit card, not the whole month's expense breakdown - a
+        # transaction is card spend iff it carries a card_id (set by
+        # `spend_on_card`, see cards/service.py).
+        conditions.append(Transaction.card_id.isnot(None))
+    stmt = (
+        select(Transaction.category_id, func.sum(Transaction.amount))
+        .where(*conditions)
         .group_by(Transaction.category_id)
         .order_by(func.sum(Transaction.amount).desc())
     )
@@ -189,6 +214,21 @@ async def get_by_bill_and_due_date(
         select(Transaction)
         .where(
             Transaction.bill_id == bill_id,
+            Transaction.deleted_at.is_(None),
+        )
+        .order_by(Transaction.created_at.desc())
+        .limit(1)
+    )
+    return result.scalar_one_or_none()
+
+
+async def get_latest_by_policy_id(
+    session: AsyncSession, policy_id: uuid.UUID | str
+) -> Transaction | None:
+    result = await session.execute(
+        select(Transaction)
+        .where(
+            Transaction.policy_id == policy_id,
             Transaction.deleted_at.is_(None),
         )
         .order_by(Transaction.created_at.desc())

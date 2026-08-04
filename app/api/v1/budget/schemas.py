@@ -30,3 +30,5 @@ class BudgetSummaryResponse(BaseModel):
     pct_remaining: float
     per_day_left: Decimal
     days_remaining_in_month: int
+    alert_triggered: bool
+    over_by: Decimal

@@ -72,6 +72,9 @@ async def get_summary(session: AsyncSession, user_id: uuid.UUID, month: str) -> 
     remaining = setting.monthly_amount - spent
     pct_remaining = float(remaining / setting.monthly_amount * 100) if setting.monthly_amount else 0.0
     days_remaining = _days_remaining_in_month(month)
+    alert_threshold = setting.monthly_amount * setting.alert_pct / 100 if setting.monthly_amount else Decimal("0")
+    alert_triggered = remaining <= alert_threshold and setting.monthly_amount > 0
+    over_by = max(spent - setting.monthly_amount, Decimal("0"))
 
     return BudgetSummaryResponse(
         monthly_amount=setting.monthly_amount,
@@ -80,4 +83,6 @@ async def get_summary(session: AsyncSession, user_id: uuid.UUID, month: str) -> 
         pct_remaining=round(pct_remaining, 1),
         per_day_left=round(remaining / days_remaining, 2),
         days_remaining_in_month=days_remaining,
+        alert_triggered=alert_triggered or remaining < 0,
+        over_by=over_by,
     )

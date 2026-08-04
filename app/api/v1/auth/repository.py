@@ -10,6 +10,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.auth.models import User
+from app.api.v1.configuration import service as config_service
 
 
 async def count_users(session: AsyncSession) -> int:
@@ -41,4 +42,5 @@ async def create_user(session: AsyncSession, **fields: object) -> User:
     user = User(**fields)
     session.add(user)
     await session.flush()
+    await config_service.initialize_user_defaults(session, user.id)
     return user

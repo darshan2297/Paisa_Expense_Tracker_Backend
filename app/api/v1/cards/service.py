@@ -4,17 +4,20 @@ import datetime as dt
 import uuid
 from decimal import Decimal
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.cards import repository
 from app.api.v1.cards.models import CreditCard
 from app.api.v1.cards.schemas import (
     CardAmountRequest,
+    CardPaymentHistoryItem,
     CardsSummaryResponse,
     CreditCardCreateRequest,
     CreditCardResponse,
     CreditCardUpdateRequest,
 )
+from app.api.v1.transactions.models import Transaction
 from app.core.exceptions import NotFoundError, ValidationError
 from app.deps import record_transaction
 
@@ -39,6 +42,44 @@ async def get_summary(session: AsyncSession, user_id: uuid.UUID) -> CardsSummary
         utilization_pct=round(utilization, 1),
         cards=cards,
     )
+
+
+async def list_payment_history(
+    session: AsyncSession, user_id: uuid.UUID, limit: int = 20
+) -> list[CardPaymentHistoryItem]:
+    """Recent card payments — txs linked to a card whose note ends with 'payment'."""
+    cards = {c.id: c for c in await repository.list_by_user(session, user_id)}
+    if not cards:
+        return []
+    result = await session.execute(
+        select(Transaction)
+        .where(
+            Transaction.user_id == user_id,
+            Transaction.deleted_at.is_(None),
+            Transaction.card_id.is_not(None),
+            Transaction.note.ilike("%payment%"),
+        )
+        .order_by(Transaction.date.desc(), Transaction.created_at.desc())
+        .limit(limit)
+    )
+    items: list[CardPaymentHistoryItem] = []
+    for txn in result.scalars().all():
+        if txn.card_id is None:
+            continue
+        card = cards.get(txn.card_id)
+        label = f"{card.bank} {card.name}" if card else (txn.note or "Card payment")
+        sub = f"{txn.date.day} {txn.date.strftime('%b %Y')}"
+        items.append(
+            CardPaymentHistoryItem(
+                id=txn.id,
+                card_id=txn.card_id,
+                label=label,
+                sub=sub,
+                amount=txn.amount,
+                date=txn.date,
+            )
+        )
+    return items
 
 
 async def create_card(

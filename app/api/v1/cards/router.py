@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.cards import service
 from app.api.v1.cards.schemas import (
     CardAmountRequest,
+    CardPaymentHistoryItem,
     CardsSummaryResponse,
     CreditCardCreateRequest,
     CreditCardResponse,
@@ -37,6 +38,16 @@ async def cards_summary(
     session: AsyncSession = Depends(get_session),
 ) -> CardsSummaryResponse:
     return await service.get_summary(session, current_user.id)
+
+
+@cards_router.get("/payments", summary="Recent card payment history")
+@default_limit()
+async def card_payments(
+    request: Request,
+    current_user: CurrentUser,
+    session: AsyncSession = Depends(get_session),
+) -> list[CardPaymentHistoryItem]:
+    return await service.list_payment_history(session, current_user.id)
 
 
 @cards_router.post("", status_code=201, summary="Create a credit card")

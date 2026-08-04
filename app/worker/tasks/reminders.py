@@ -49,3 +49,16 @@ def process_bill_rollover() -> int:
     count = asyncio.run(_run_bill_rollover())
     logger.info("bill rollover processed", extra={"count": count})
     return count
+
+
+async def _run_net_worth_snapshots() -> int:
+    from app.worker.tasks._reminder_runner import run_net_worth_snapshots
+
+    return await run_net_worth_snapshots()
+
+
+@celery_app.task(name="app.worker.tasks.reminders.process_net_worth_snapshots")
+def process_net_worth_snapshots() -> int:
+    count = asyncio.run(_run_net_worth_snapshots())
+    logger.info("net worth snapshots processed", extra={"count": count})
+    return count

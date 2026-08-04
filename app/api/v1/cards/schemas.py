@@ -68,3 +68,12 @@ class CardsSummaryResponse(BaseModel):
     total_outstanding: Decimal
     utilization_pct: float
     cards: list[CreditCardResponse]
+
+
+class CardPaymentHistoryItem(BaseModel):
+    id: uuid.UUID
+    card_id: uuid.UUID
+    label: str
+    sub: str
+    amount: Decimal
+    date: dt.date

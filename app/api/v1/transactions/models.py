@@ -48,6 +48,8 @@ class Transaction(Base, UUIDPKMixin, TimestampMixin, SoftDeleteMixin):
     currency: Mapped[str] = mapped_column(String(3), nullable=False, server_default="INR")
     date: Mapped[dt.date] = mapped_column(Date, nullable=False)
     note: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # Relative path under STORAGE_DIR, e.g. receipts/{user_id}/{txn_id}.jpg
+    receipt_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     # Nullable FK to `fixed_commitments.id` (added by the F5 migration,
     # after both tables already exist) - a transaction created by "mark
@@ -61,4 +63,7 @@ class Transaction(Base, UUIDPKMixin, TimestampMixin, SoftDeleteMixin):
     )
     card_id: Mapped[uuid.UUID | None] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey("credit_cards.id"), nullable=True
+    )
+    policy_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("policies.id"), nullable=True
     )

@@ -26,6 +26,13 @@ class TransactionCreateRequest(BaseModel):
     note: str | None = Field(default=None, max_length=500)
 
 
+class TransactionUpdateRequest(BaseModel):
+    category_id: uuid.UUID | None = None
+    amount: Decimal | None = Field(default=None, gt=0)
+    date: dt.date | None = None
+    note: str | None = Field(default=None, max_length=500)
+
+
 class TransactionResponse(BaseModel):
     model_config = {"from_attributes": True}
 
@@ -38,6 +45,8 @@ class TransactionResponse(BaseModel):
     note: str | None
     category: CategoryResponse
     created_at: dt.datetime
+    has_receipt: bool = False
+    receipt_url: str | None = None
 
 
 class TransactionListResponse(BaseModel):

@@ -7,6 +7,7 @@ expected to have already been run against that database before the test
 suite starts (CI/local docs both do this explicitly).
 """
 
+import asyncio
 import os
 
 os.environ.setdefault("ENVIRONMENT", "test")
@@ -16,6 +17,7 @@ from collections.abc import AsyncGenerator
 import pytest
 from sqlalchemy import text
 
+from app.bootstrap.reference_data import ensure_reference_data_and_reset_pool
 from app.core.base_model import Base
 from app.core.database import get_engine, get_sessionmaker
 from app.middleware.rate_limit import limiter
@@ -31,6 +33,12 @@ def _reset_rate_limits() -> None:
     partway through the suite, unrelated to what each test is verifying.
     """
     limiter.reset()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _ensure_reference_data() -> None:
+    """Guarantee the configuration catalog exists before any test runs."""
+    asyncio.run(ensure_reference_data_and_reset_pool())
 
 
 @pytest.fixture(autouse=True)
@@ -55,7 +63,7 @@ async def _clean_database() -> AsyncGenerator[None, None]:
     """
     yield
     engine = get_engine()
-    skip_tables = {"categories"}  # global seeded taxonomy — never user-owned rows
+    skip_tables = {"categories", "configurations"}  # global reference data — never truncated
     async with engine.begin() as conn:
         for table in reversed(Base.metadata.sorted_tables):
             if table.name in skip_tables:

@@ -36,4 +36,7 @@ poetry.lock.bak
 # OS
 .DS_Store
 
+# Local uploaded receipts / files
+storage/
+
 # Alembic (keep versions dir tracked, ignore nothing special here for now)

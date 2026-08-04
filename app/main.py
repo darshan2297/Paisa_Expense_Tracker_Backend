@@ -14,6 +14,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from app.api.portal.router import portal_router
 from app.api.v1.router import api_v1_router
+from app.bootstrap.reference_data import ensure_reference_data
 from app.core.config import get_settings
 from app.core.logging import configure_logging
 from app.core.redis import close_redis
@@ -25,6 +26,7 @@ from app.middleware.response_envelope import ResponseEnvelopeMiddleware
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    await ensure_reference_data()
     yield
     await close_redis()
 

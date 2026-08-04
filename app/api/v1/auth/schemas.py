@@ -34,6 +34,35 @@ class TokenPairResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
+    # Whether this account already has an app PIN configured.
+    pin_configured: bool = False
+
+
+class PinStatusResponse(BaseModel):
+    configured: bool
+
+
+class PinSetRequest(BaseModel):
+    """Create the account PIN (first time) or replace it after Forgot PIN."""
+
+    pin: str = Field(min_length=6, max_length=6, pattern=r"^\d{6}$")
+
+
+class PinChangeRequest(BaseModel):
+    current_pin: str = Field(min_length=6, max_length=6, pattern=r"^\d{6}$")
+    new_pin: str = Field(min_length=6, max_length=6, pattern=r"^\d{6}$")
+
+
+class PinVerifyRequest(BaseModel):
+    pin: str = Field(min_length=6, max_length=6, pattern=r"^\d{6}$")
+
+
+class PinVerifyResponse(BaseModel):
+    valid: bool
+
+
+class PinClearRequest(BaseModel):
+    pin: str = Field(min_length=6, max_length=6, pattern=r"^\d{6}$")
 
 
 class ProfileResponse(BaseModel):
@@ -53,6 +82,7 @@ class ProfileResponse(BaseModel):
     digest_enabled: bool
     sound_enabled: bool
     created_at: datetime
+    pin_configured: bool = False
 
 
 class ProfileUpdateRequest(BaseModel):
@@ -69,3 +99,23 @@ class ProfileUpdateRequest(BaseModel):
     round_up_savings: bool | None = None
     digest_enabled: bool | None = None
     sound_enabled: bool | None = None
+
+
+class ConfigurationOptionResponse(BaseModel):
+    key: str
+    category: str
+    value_type: str
+    default_value: bool | int | str
+    label: str | None = None
+    description: str | None = None
+    allowed_values: list[bool | int | str] | None = None
+
+
+class ProfileConfigResponse(BaseModel):
+    """UI configuration options for profile & security settings screens."""
+
+    auto_logout_minutes_options: list[int] = Field(default_factory=lambda: [1, 5, 15, 30])
+    month_start_day_min: int = 1
+    month_start_day_max: int = 28
+    currencies: list[str] = Field(default_factory=lambda: ["INR"])
+    options: list[ConfigurationOptionResponse] = Field(default_factory=list)
