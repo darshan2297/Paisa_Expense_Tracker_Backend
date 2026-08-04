@@ -21,11 +21,6 @@ class LoanResponse(BaseModel):
 
     @computed_field  # type: ignore[prop-decorator]
     @property
-    def emi(self) -> Decimal:
-        return compute_emi(self.principal, self.rate_pct, self.tenure_months)
-
-    @computed_field  # type: ignore[prop-decorator]
-    @property
     def paid_months(self) -> int:
         return paid_months_count(self.start_date, self.tenure_months)
 
@@ -33,6 +28,22 @@ class LoanResponse(BaseModel):
     @property
     def remaining_months(self) -> int:
         return max(0, self.tenure_months - self.paid_months)
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def emi(self) -> Decimal:
+        """Current EMI from outstanding + remaining term + current rate.
+
+        After rate changes, banks recompute installment on the *remaining*
+        balance and term — not the original principal and full tenure.
+        Example: ₹4,32,906 @ 7.85% for 97 months → ₹6,042 (not ₹5,786
+        from ₹4,80,000 / 120 months).
+        """
+        remaining = self.remaining_months
+        if remaining <= 0:
+            return Decimal("0.00")
+        balance = self.outstanding if self.outstanding > 0 else self.principal
+        return compute_emi(balance, self.rate_pct, remaining)
 
 
 class LoanCreateRequest(BaseModel):
@@ -100,13 +111,25 @@ def paid_months_count(start_date: dt.date, tenure_months: int) -> int:
 
 
 def build_schedule(
-    principal: Decimal, rate_pct: Decimal, tenure_months: int, outstanding: Decimal | None = None
+    principal: Decimal,
+    rate_pct: Decimal,
+    tenure_months: int,
+    outstanding: Decimal | None = None,
+    *,
+    remaining_months: int | None = None,
 ) -> list[ScheduleRow]:
-    emi = compute_emi(principal, rate_pct, tenure_months)
-    r = rate_pct / Decimal("1200")
+    """Amortization for the *remaining* balance at the current rate.
+
+    `remaining_months` defaults to `tenure_months` when not provided (new loan).
+    """
     balance = outstanding if outstanding is not None else principal
+    months = remaining_months if remaining_months is not None else tenure_months
+    if months <= 0 or balance <= 0:
+        return []
+    emi = compute_emi(balance, rate_pct, months)
+    r = rate_pct / Decimal("1200")
     rows: list[ScheduleRow] = []
-    for month in range(1, tenure_months + 1):
+    for month in range(1, months + 1):
         if balance <= 0:
             break
         interest = (balance * r).quantize(Decimal("0.01"))

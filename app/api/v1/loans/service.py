@@ -90,7 +90,14 @@ async def get_schedule(
     loan = await repository.get_by_id(session, loan_id, user_id)
     if loan is None:
         raise NotFoundError("Loan not found")
-    return build_schedule(loan.principal, loan.rate_pct, loan.tenure_months, loan.outstanding)
+    response = _to_response(loan)
+    return build_schedule(
+        loan.principal,
+        loan.rate_pct,
+        loan.tenure_months,
+        loan.outstanding,
+        remaining_months=response.remaining_months,
+    )
 
 
 async def prepay(
@@ -102,22 +109,32 @@ async def prepay(
     if payload.amount > loan.outstanding:
         raise ValidationError("Prepayment exceeds outstanding balance")
 
+    before = _to_response(loan)
     old_schedule = build_schedule(
-        loan.principal, loan.rate_pct, loan.tenure_months, loan.outstanding
+        loan.principal,
+        loan.rate_pct,
+        loan.tenure_months,
+        loan.outstanding,
+        remaining_months=before.remaining_months,
     )
     old_interest = sum((r.interest for r in old_schedule), Decimal("0"))
 
     loan.outstanding = (loan.outstanding - payload.amount).quantize(Decimal("0.01"))
     await session.flush()
 
+    after = _to_response(loan)
     new_schedule = build_schedule(
-        loan.principal, loan.rate_pct, loan.tenure_months, loan.outstanding
+        loan.principal,
+        loan.rate_pct,
+        loan.tenure_months,
+        loan.outstanding,
+        remaining_months=after.remaining_months,
     )
     new_interest = sum((r.interest for r in new_schedule), Decimal("0"))
     interest_saved = max(old_interest - new_interest, Decimal("0"))
 
     return PrepayResponse(
-        loan=_to_response(loan),
+        loan=after,
         interest_saved=interest_saved.quantize(Decimal("0.01")),
         new_outstanding=loan.outstanding,
         schedule=new_schedule,
