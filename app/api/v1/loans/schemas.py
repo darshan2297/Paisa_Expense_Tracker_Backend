@@ -47,8 +47,12 @@ class LoanCreateRequest(BaseModel):
 
 class LoanUpdateRequest(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=255)
-    outstanding: Decimal | None = Field(default=None, ge=0)
+    kind: str | None = Field(default=None, pattern=r"^(HL|VL|PL|OTHER)$")
+    principal: Decimal | None = Field(default=None, gt=0)
     rate_pct: Decimal | None = Field(default=None, ge=0, le=100)
+    tenure_months: int | None = Field(default=None, ge=1, le=600)
+    start_date: dt.date | None = None
+    outstanding: Decimal | None = Field(default=None, ge=0)
 
 
 class ScheduleRow(BaseModel):
