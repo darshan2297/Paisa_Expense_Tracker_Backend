@@ -12,10 +12,10 @@ engineering philosophy.
 poetry install
 cp .env.example .env    # then edit DATABASE_URL etc.
 poetry run alembic upgrade head
-poetry run uvicorn app.main:app --reload
+poetry run uvicorn app.main:app --reload --port 8001
 ```
 
-API docs: `http://localhost:8000/docs` (Swagger) once running.
+API docs: `http://localhost:8001/docs` (Swagger) once running.
 
 See `docs/INSTALLATION.md` for full local setup (including via Docker) and
 `docs/DEVELOPMENT_GUIDE.md` for day-to-day workflow.

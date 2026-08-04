@@ -13,13 +13,20 @@ from alembic import context
 # of the current working directory `alembic` is invoked from.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.core.base_model import Base  # noqa: E402
-from app.core.config import get_settings  # noqa: E402
-
 # Import model modules here as they're added in later phases, so their
 # tables register on `Base.metadata` and `alembic revision --autogenerate`
-# can detect them, e.g.:
-#     from app.features.users import models as _users_models  # noqa: F401
+# can detect them.
+from app.api.v1.accounts import models as _accounts_models  # noqa: E402, F401
+from app.api.v1.auth import models as _auth_models  # noqa: E402, F401
+from app.api.v1.bills import models as _bills_models  # noqa: E402, F401
+from app.api.v1.budget import models as _budget_models  # noqa: E402, F401
+from app.api.v1.cards import models as _cards_models  # noqa: E402, F401
+from app.api.v1.categories import models as _categories_models  # noqa: E402, F401
+from app.api.v1.configuration import models as _configuration_models  # noqa: E402, F401
+from app.api.v1.fixed_commitments import models as _fixed_commitments_models  # noqa: E402, F401
+from app.api.v1.transactions import models as _transactions_models  # noqa: E402, F401
+from app.core.base_model import Base  # noqa: E402
+from app.core.config import get_settings  # noqa: E402
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
