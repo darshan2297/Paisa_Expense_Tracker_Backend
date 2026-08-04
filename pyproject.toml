@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "paisa-backend"
-version = "1.0.0"
+version = "0.2.0"
 description = "Paisa personal finance tracker - backend API"
 authors = ["Darshan <darshan.vankawala@viitor.cloud>"]
 package-mode = false
