@@ -41,7 +41,7 @@ async def export_report(
         raise HTTPException(status_code=404, detail="Unknown report type")
     report = await service.build_report(session, current_user.id, report_type, month)
     if format == "csv":
-        content = service.export_csv(report)
-        return Response(content=content, media_type="text/csv")
-    content = service.export_pdf_text(report)
-    return Response(content=content, media_type="application/pdf")
+        csv_content = service.export_csv(report)
+        return Response(content=csv_content, media_type="text/csv")
+    pdf_content = service.export_pdf_text(report)
+    return Response(content=pdf_content, media_type="application/pdf")

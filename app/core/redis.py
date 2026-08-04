@@ -5,6 +5,7 @@ via Celery's own connection pool.
 """
 
 from functools import lru_cache
+from typing import cast
 
 import redis.asyncio as aioredis
 
@@ -14,7 +15,10 @@ from app.core.config import get_settings
 @lru_cache
 def get_redis() -> aioredis.Redis:
     settings = get_settings()
-    return aioredis.from_url(settings.REDIS_URL, decode_responses=True)
+    return cast(
+        aioredis.Redis,
+        aioredis.from_url(settings.REDIS_URL, decode_responses=True),  # type: ignore[no-untyped-call]
+    )
 
 
 async def ping_redis() -> bool:

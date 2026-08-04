@@ -12,8 +12,8 @@ from app.api.v1.assets import repository as assets_repo
 from app.api.v1.auth.models import User
 from app.api.v1.bills import repository as bills_repo
 from app.api.v1.cards import repository as cards_repo
-from app.api.v1.configuration.catalog import PROFILE_CONFIG_KEYS, SECURITY_CONFIG_KEYS
 from app.api.v1.configuration import service as config_service
+from app.api.v1.configuration.catalog import PROFILE_CONFIG_KEYS, SECURITY_CONFIG_KEYS
 from app.api.v1.goals import repository as goals_repo
 from app.api.v1.investments import repository as investments_repo
 from app.api.v1.ledger import repository as ledger_repo
@@ -30,8 +30,14 @@ from app.api.v1.security.schemas import (
     SecuritySettingsUpdateRequest,
     SessionResponse,
 )
-from app.core.pagination import PageParams
 from app.core.exceptions import NotFoundError, ValidationError
+from app.core.pagination import PageParams
+
+
+def _as_int(value: object) -> int:
+    if isinstance(value, int):
+        return value
+    raise TypeError(f"Expected int, got {type(value).__name__}")
 
 
 def _settings_from(user: User, values: dict[str, Any]) -> SecuritySettingsResponse:
@@ -47,7 +53,7 @@ def _settings_from(user: User, values: dict[str, Any]) -> SecuritySettingsRespon
         local_backup_enabled=bool(values["local_backup_enabled"]),
         e2e_encryption_enabled=bool(values["e2e_encryption_enabled"]),
         two_factor_enabled=bool(values["two_factor_enabled"]),
-        auto_logout_minutes=int(values["auto_logout_minutes"]),  # type: ignore[arg-type]
+        auto_logout_minutes=_as_int(values["auto_logout_minutes"]),
         vault_locked=user.vault_locked,
     )
 
@@ -214,7 +220,9 @@ async def record_logout(session: AsyncSession, user: User) -> None:
     await repository.revoke_all_except(session, user.id, None)
 
 
-async def record_password_change(session: AsyncSession, user: User, request: Request | None = None) -> None:
+async def record_password_change(
+    session: AsyncSession, user: User, request: Request | None = None
+) -> None:
     device = _device_label_from_request(request) if request else "This device"
     # Password change bumps credential_version (all tokens die); clear stale devices.
     await repository.revoke_all_except(session, user.id, None)
@@ -259,7 +267,7 @@ async def export_backup(session: AsyncSession, user: User) -> BackupResponse:
         "security_settings": _settings_from(user, security_values).model_dump(),
         "goals": [g.name for g in await goals_repo.list_by_user(session, user_id)],
         "investments": [i.name for i in await investments_repo.list_by_user(session, user_id)],
-        "loans": [l.name for l in await loans_repo.list_by_user(session, user_id)],
+        "loans": [loan.name for loan in await loans_repo.list_by_user(session, user_id)],
         "assets": [a.name for a in await assets_repo.list_by_user(session, user_id)],
         "bills": [b.name for b in await bills_repo.list_by_user(session, user_id)],
         "cards": [c.name for c in await cards_repo.list_by_user(session, user_id)],

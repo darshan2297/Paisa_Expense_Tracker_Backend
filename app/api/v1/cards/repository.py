@@ -2,7 +2,6 @@
 
 import datetime as dt
 import uuid
-from decimal import Decimal
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession

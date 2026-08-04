@@ -23,7 +23,6 @@ from app.api.v1.loans import repository as loans_repo
 from app.api.v1.policies import repository as policies_repo
 from app.api.v1.transactions.models import Transaction, TransactionType
 from app.api.v1.transactions.repository import month_bounds
-from app.deps import get_month_totals
 
 
 async def _transactions_by_day(
@@ -64,8 +63,12 @@ async def get_calendar(session: AsyncSession, user_id: uuid.UUID, month: str) ->
     for day_num in range(1, days_in_month + 1):
         date = dt.date(year, mon, day_num)
         txns = by_day.get(date, [])
-        inflow = sum((t.amount for t in txns if t.type == TransactionType.INCOME.value), Decimal("0"))
-        outflow = sum((t.amount for t in txns if t.type == TransactionType.EXPENSE.value), Decimal("0"))
+        inflow = sum(
+            (t.amount for t in txns if t.type == TransactionType.INCOME.value), Decimal("0")
+        )
+        outflow = sum(
+            (t.amount for t in txns if t.type == TransactionType.EXPENSE.value), Decimal("0")
+        )
         actual_in += inflow
         actual_out += outflow
         highest_out = max(highest_out, outflow)
@@ -73,7 +76,9 @@ async def get_calendar(session: AsyncSession, user_id: uuid.UUID, month: str) ->
         planned: list[PlannedItem] = []
         for g in goals:
             if g.monthly_contribution > 0 and g.due_day == day_num:
-                planned.append(PlannedItem(label=g.name, kind="Goal", amount=g.monthly_contribution))
+                planned.append(
+                    PlannedItem(label=g.name, kind="Goal", amount=g.monthly_contribution)
+                )
                 planned_total += g.monthly_contribution
         for bill in bills:
             if bill.due_date == date and bill.paid_on is None:
@@ -81,7 +86,9 @@ async def get_calendar(session: AsyncSession, user_id: uuid.UUID, month: str) ->
                 planned_total += bill.amount
         for policy in policies:
             if policy.renewal_date == date:
-                planned.append(PlannedItem(label=policy.name, kind="Insurance", amount=policy.premium))
+                planned.append(
+                    PlannedItem(label=policy.name, kind="Insurance", amount=policy.premium)
+                )
                 planned_total += policy.premium
         for loan in loans:
             if loan.start_date.day == day_num:

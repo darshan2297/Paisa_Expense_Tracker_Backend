@@ -9,7 +9,9 @@ from app.api.v1.notifications.schemas import NotificationResponse, PushTokenCrea
 from app.core.exceptions import NotFoundError
 
 
-async def list_notifications(session: AsyncSession, user_id: uuid.UUID) -> list[NotificationResponse]:
+async def list_notifications(
+    session: AsyncSession, user_id: uuid.UUID
+) -> list[NotificationResponse]:
     rows = await repository.list_notifications(session, user_id)
     return [NotificationResponse.model_validate(r) for r in rows]
 

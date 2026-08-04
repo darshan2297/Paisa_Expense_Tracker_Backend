@@ -55,7 +55,10 @@ async def create_entry(
 
 
 async def update_entry(
-    session: AsyncSession, user_id: uuid.UUID, entry_id: uuid.UUID, payload: LedgerEntryUpdateRequest
+    session: AsyncSession,
+    user_id: uuid.UUID,
+    entry_id: uuid.UUID,
+    payload: LedgerEntryUpdateRequest,
 ) -> LedgerEntryResponse:
     entry = await repository.get_by_id(session, entry_id, user_id)
     if entry is None:

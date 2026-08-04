@@ -28,8 +28,18 @@ def upgrade() -> None:
         sa.Column("current_value", sa.Numeric(precision=14, scale=2), nullable=False),
         sa.Column("acquired_on", sa.Date(), nullable=True),
         sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], name=op.f("fk_assets_user_id")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_assets")),
@@ -45,12 +55,26 @@ def upgrade() -> None:
         sa.Column("net_worth", sa.Numeric(precision=14, scale=2), nullable=False),
         sa.Column("breakdown_json", sa.String(), server_default="{}", nullable=False),
         sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.ForeignKeyConstraint(["user_id"], ["users.id"], name=op.f("fk_net_worth_snapshots_user_id")),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.ForeignKeyConstraint(
+            ["user_id"], ["users.id"], name=op.f("fk_net_worth_snapshots_user_id")
+        ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_net_worth_snapshots")),
     )
-    op.create_index(op.f("ix_net_worth_snapshots_user_id"), "net_worth_snapshots", ["user_id"], unique=False)
+    op.create_index(
+        op.f("ix_net_worth_snapshots_user_id"), "net_worth_snapshots", ["user_id"], unique=False
+    )
 
 
 def downgrade() -> None:

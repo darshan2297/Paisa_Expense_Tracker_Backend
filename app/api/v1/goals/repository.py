@@ -21,9 +21,7 @@ async def list_by_user(session: AsyncSession, user_id: uuid.UUID) -> list[Goal]:
 
 async def get_by_id(session: AsyncSession, goal_id: uuid.UUID, user_id: uuid.UUID) -> Goal | None:
     result = await session.execute(
-        select(Goal).where(
-            Goal.id == goal_id, Goal.user_id == user_id, Goal.deleted_at.is_(None)
-        )
+        select(Goal).where(Goal.id == goal_id, Goal.user_id == user_id, Goal.deleted_at.is_(None))
     )
     return result.scalar_one_or_none()
 
@@ -62,7 +60,9 @@ async def create(
     return goal
 
 
-async def clear_emergency_flag(session: AsyncSession, user_id: uuid.UUID, except_id: uuid.UUID | None = None) -> None:
+async def clear_emergency_flag(
+    session: AsyncSession, user_id: uuid.UUID, except_id: uuid.UUID | None = None
+) -> None:
     stmt = (
         update(Goal)
         .where(Goal.user_id == user_id, Goal.is_emergency.is_(True), Goal.deleted_at.is_(None))

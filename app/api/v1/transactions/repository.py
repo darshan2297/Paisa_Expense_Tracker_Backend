@@ -8,6 +8,7 @@ import calendar
 import datetime as dt
 import uuid
 from decimal import Decimal
+from typing import Any
 
 from sqlalchemy import Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,14 +26,14 @@ def month_bounds(month: str) -> tuple[dt.date, dt.date]:
 
 
 def _scope(
-    stmt: Select,
+    stmt: Select[Any],
     user_id: uuid.UUID | str,
     start: dt.date,
     end: dt.date,
     type_filter: str | None,
     query: str | None,
     matching_category_ids: list[uuid.UUID] | None,
-) -> Select:
+) -> Select[Any]:
     stmt = stmt.where(
         Transaction.user_id == user_id,
         Transaction.deleted_at.is_(None),
@@ -99,7 +100,9 @@ async def list_recent(
     return list((await session.execute(stmt)).scalars().all())
 
 
-async def sum_by_type(session: AsyncSession, user_id: uuid.UUID | str, month: str) -> dict[str, Decimal]:
+async def sum_by_type(
+    session: AsyncSession, user_id: uuid.UUID | str, month: str
+) -> dict[str, Decimal]:
     start, end = month_bounds(month)
     stmt = (
         select(Transaction.type, func.coalesce(func.sum(Transaction.amount), 0))
@@ -115,7 +118,9 @@ async def sum_by_type(session: AsyncSession, user_id: uuid.UUID | str, month: st
     return {row[0]: Decimal(row[1]) for row in rows}
 
 
-async def sum_by_type_all_time(session: AsyncSession, user_id: uuid.UUID | str) -> dict[str, Decimal]:
+async def sum_by_type_all_time(
+    session: AsyncSession, user_id: uuid.UUID | str
+) -> dict[str, Decimal]:
     """Same as `sum_by_type` but with no date filter - the all-time
     income/expense totals a net-cash figure needs (see net_worth service),
     as opposed to `sum_by_type`'s single-month scope used by the monthly
@@ -184,7 +189,9 @@ async def soft_delete(session: AsyncSession, transaction: Transaction) -> None:
     await session.flush()
 
 
-async def get_by_id_unscoped(session: AsyncSession, transaction_id: uuid.UUID | str) -> Transaction | None:
+async def get_by_id_unscoped(
+    session: AsyncSession, transaction_id: uuid.UUID | str
+) -> Transaction | None:
     """No `user_id`/ownership filter - used only for the fixed-commitments
     "toggle paid" flow, which resolves the transaction id from a commitment
     it already verified belongs to the current user.

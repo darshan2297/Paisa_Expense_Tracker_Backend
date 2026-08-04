@@ -14,7 +14,7 @@ class GroupExpenseItem(BaseModel):
     amount: Decimal
     date: dt.date
     split_type: str
-    splits: list[dict]
+    splits: list[dict[str, object]]
 
 
 class GroupSettlementItem(BaseModel):
@@ -56,7 +56,7 @@ class GroupExpenseCreateRequest(BaseModel):
     # For "custom"/"percent", the client must supply per-member shares that
     # sum exactly to `amount` (validated below) - there is no server-side
     # derivation for those modes.
-    splits: list[dict] = Field(default_factory=list)
+    splits: list[dict[str, object]] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def _validate_non_equal_splits(self) -> "GroupExpenseCreateRequest":
@@ -66,9 +66,7 @@ class GroupExpenseCreateRequest(BaseModel):
             raise ValueError(f"splits is required when split_type is '{self.split_type}'")
         total = sum((Decimal(str(s.get("amount", 0))) for s in self.splits), Decimal("0"))
         if total != self.amount:
-            raise ValueError(
-                f"splits must sum to the expense amount ({self.amount}), got {total}"
-            )
+            raise ValueError(f"splits must sum to the expense amount ({self.amount}), got {total}")
         return self
 
 

@@ -1,7 +1,6 @@
 """Pydantic schemas for net worth."""
 
 import datetime as dt
-import uuid
 from decimal import Decimal
 
 from pydantic import BaseModel

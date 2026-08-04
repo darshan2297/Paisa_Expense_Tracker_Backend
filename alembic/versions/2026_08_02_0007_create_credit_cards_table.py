@@ -27,13 +27,25 @@ def upgrade() -> None:
         sa.Column("network", sa.String(length=64), server_default="Visa", nullable=False),
         sa.Column("last4", sa.String(length=4), nullable=False),
         sa.Column("credit_limit", sa.Numeric(precision=14, scale=2), nullable=False),
-        sa.Column("outstanding", sa.Numeric(precision=14, scale=2), server_default="0", nullable=False),
+        sa.Column(
+            "outstanding", sa.Numeric(precision=14, scale=2), server_default="0", nullable=False
+        ),
         sa.Column("statement_day", sa.Integer(), nullable=False),
         sa.Column("due_day", sa.Integer(), nullable=False),
         sa.Column("opened_on", sa.Date(), nullable=True),
         sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], name=op.f("fk_credit_cards_user_id")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_credit_cards")),

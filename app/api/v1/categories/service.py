@@ -37,7 +37,9 @@ async def list_categories(session: AsyncSession) -> list[CategoryResponse]:
     return responses
 
 
-async def get_category(session: AsyncSession, category_id: uuid.UUID | str) -> CategoryResponse | None:
+async def get_category(
+    session: AsyncSession, category_id: uuid.UUID | str
+) -> CategoryResponse | None:
     """Used by other feature modules (transactions, fixed_commitments) via
     `app.deps` to resolve category display info (name/color/kind) without
     an ORM-level cross-module join - see docs/DEVELOPER_PHILOSOPHY.md §2.2.

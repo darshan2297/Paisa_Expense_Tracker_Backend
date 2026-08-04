@@ -44,7 +44,9 @@ from app.core.storage import (
 _UNKNOWN_CATEGORY_COLOR = "#A79E92"
 
 
-def _to_response(transaction: Transaction, cat_by_id: dict[uuid.UUID, CategoryResponse]) -> TransactionResponse:
+def _to_response(
+    transaction: Transaction, cat_by_id: dict[uuid.UUID, CategoryResponse]
+) -> TransactionResponse:
     category = cat_by_id.get(transaction.category_id)
     if category is None:
         # Defensive: categories are a fixed seeded taxonomy that's never
@@ -83,7 +85,9 @@ async def list_transactions(
 ) -> TransactionListResponse:
     matching_category_ids = None
     if query:
-        matching_category_ids = [c.id for c in cat_by_id.values() if query.lower() in c.name.lower()]
+        matching_category_ids = [
+            c.id for c in cat_by_id.values() if query.lower() in c.name.lower()
+        ]
 
     rows, total = await repository.list_transactions(
         session, user_id, month, type_filter, query, matching_category_ids, params
@@ -147,7 +151,9 @@ async def create_transaction(
     if category is None:
         raise NotFoundError("Category not found")
     if category.kind != payload.type:
-        raise ValidationError(f"'{category.name}' is a {category.kind} category, not {payload.type}")
+        raise ValidationError(
+            f"'{category.name}' is a {category.kind} category, not {payload.type}"
+        )
 
     transaction = await repository.create_transaction(
         session,
@@ -162,7 +168,9 @@ async def create_transaction(
     return _to_response(transaction, cat_by_id)
 
 
-async def delete_transaction(session: AsyncSession, user_id: uuid.UUID, transaction_id: uuid.UUID) -> None:
+async def delete_transaction(
+    session: AsyncSession, user_id: uuid.UUID, transaction_id: uuid.UUID
+) -> None:
     transaction = await repository.get_by_id(session, transaction_id, user_id)
     if transaction is None:
         raise NotFoundError("Transaction not found")
@@ -257,7 +265,9 @@ async def update_transaction(
     return _to_response(transaction, cat_by_id)
 
 
-async def get_month_totals(session: AsyncSession, user_id: uuid.UUID, month: str) -> tuple[Decimal, Decimal]:
+async def get_month_totals(
+    session: AsyncSession, user_id: uuid.UUID, month: str
+) -> tuple[Decimal, Decimal]:
     """`(income_total, expense_total)` for the month.
 
     Reused by the budget module (via `app.deps`, from F4 onward) to compute
@@ -330,7 +340,9 @@ async def find_transaction_for_commitment(
     """Reused by fixed_commitments (via `app.deps`) to check whether a
     commitment's "mark paid" transaction already exists for a given month.
     """
-    transaction = await repository.get_by_fixed_commitment_and_month(session, fixed_commitment_id, month)
+    transaction = await repository.get_by_fixed_commitment_and_month(
+        session, fixed_commitment_id, month
+    )
     return transaction.id if transaction else None
 
 
@@ -341,7 +353,9 @@ async def find_transaction_for_bill(
     return transaction.id if transaction else None
 
 
-async def find_transaction_for_policy(session: AsyncSession, policy_id: uuid.UUID) -> uuid.UUID | None:
+async def find_transaction_for_policy(
+    session: AsyncSession, policy_id: uuid.UUID
+) -> uuid.UUID | None:
     transaction = await repository.get_latest_by_policy_id(session, policy_id)
     return transaction.id if transaction else None
 

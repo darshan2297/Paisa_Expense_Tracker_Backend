@@ -55,7 +55,7 @@ def _to_response(group: ExpenseGroup) -> GroupResponse:
     )
 
 
-def _equal_shares(amount: Decimal, members: list[str]) -> list[dict]:
+def _equal_shares(amount: Decimal, members: list[str]) -> list[dict[str, object]]:
     """Split `amount` across `members` so the shares sum EXACTLY to `amount`.
 
     Naive `amount / len(members)` drops a remainder whenever the amount isn't
@@ -66,7 +66,7 @@ def _equal_shares(amount: Decimal, members: list[str]) -> list[dict]:
     n = len(members)
     total_cents = int((amount * 100).to_integral_value())
     base_cents, remainder_cents = divmod(total_cents, n)
-    shares = []
+    shares: list[dict[str, object]] = []
     for i, member in enumerate(members):
         cents = base_cents + (1 if i < remainder_cents else 0)
         shares.append({"member": member, "amount": str(Decimal(cents) / 100)})
@@ -86,14 +86,18 @@ def _compute_balances(group: ExpenseGroup) -> list[MemberBalance]:
             # recompute the same canonical, remainder-safe allocation.
             splits = _equal_shares(expense.amount, members)
         for split in splits:
-            member = split.get("member", "")
+            member = str(split.get("member", ""))
             amt = Decimal(str(split.get("amount", 0)))
             balances[member] = balances.get(member, Decimal("0")) - amt
     for settlement in group.settlements:
         if settlement.deleted_at is not None:
             continue
-        balances[settlement.from_member] = balances.get(settlement.from_member, Decimal("0")) + settlement.amount
-        balances[settlement.to_member] = balances.get(settlement.to_member, Decimal("0")) - settlement.amount
+        balances[settlement.from_member] = (
+            balances.get(settlement.from_member, Decimal("0")) + settlement.amount
+        )
+        balances[settlement.to_member] = (
+            balances.get(settlement.to_member, Decimal("0")) - settlement.amount
+        )
     return [MemberBalance(member=m, balance=bal) for m, bal in balances.items()]
 
 
@@ -132,7 +136,10 @@ async def delete_group(session: AsyncSession, user_id: uuid.UUID, group_id: uuid
 
 
 async def add_expense(
-    session: AsyncSession, user_id: uuid.UUID, group_id: uuid.UUID, payload: GroupExpenseCreateRequest
+    session: AsyncSession,
+    user_id: uuid.UUID,
+    group_id: uuid.UUID,
+    payload: GroupExpenseCreateRequest,
 ) -> GroupResponse:
     group = await repository.get_by_id(session, group_id, user_id)
     if group is None:
@@ -165,7 +172,10 @@ async def delete_expense(
 
 
 async def add_settlement(
-    session: AsyncSession, user_id: uuid.UUID, group_id: uuid.UUID, payload: GroupSettlementCreateRequest
+    session: AsyncSession,
+    user_id: uuid.UUID,
+    group_id: uuid.UUID,
+    payload: GroupSettlementCreateRequest,
 ) -> GroupResponse:
     group = await repository.get_by_id(session, group_id, user_id)
     if group is None:

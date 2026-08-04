@@ -9,8 +9,8 @@ from app.api.v1.investments import service
 from app.api.v1.investments.schemas import (
     InvestmentCreateRequest,
     InvestmentResponse,
-    InvestmentUpdateRequest,
     InvestmentsSummaryResponse,
+    InvestmentUpdateRequest,
     UpdateValueRequest,
 )
 from app.deps import CurrentUser, get_session

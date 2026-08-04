@@ -40,7 +40,9 @@ async def get_summary(session: AsyncSession, user_id: uuid.UUID) -> AssetsSummar
         )
         for k, v in sorted(by_kind.items())
     ]
-    return AssetsSummaryResponse(total_value=total, count=len(assets), allocation=allocation, assets=assets)
+    return AssetsSummaryResponse(
+        total_value=total, count=len(assets), allocation=allocation, assets=assets
+    )
 
 
 async def create_asset(

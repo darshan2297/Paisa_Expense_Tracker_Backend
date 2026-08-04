@@ -3,7 +3,6 @@
 import calendar
 import datetime as dt
 import uuid
-from decimal import Decimal
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -26,7 +25,9 @@ def _status_label(days_until: int, lead_days: int, paid_on: dt.date | None) -> s
     return "Active"
 
 
-def _to_response(bill: Bill, today: dt.date, linked_transaction_id: uuid.UUID | None) -> BillResponse:
+def _to_response(
+    bill: Bill, today: dt.date, linked_transaction_id: uuid.UUID | None
+) -> BillResponse:
     days_until = (bill.due_date - today).days
     return BillResponse(
         id=bill.id,
@@ -90,7 +91,9 @@ async def list_bills(
     return sorted(responses, key=lambda r: (r.paid_on is not None, r.due_date))
 
 
-async def create_bill(session: AsyncSession, user_id: uuid.UUID, payload: BillCreateRequest) -> BillResponse:
+async def create_bill(
+    session: AsyncSession, user_id: uuid.UUID, payload: BillCreateRequest
+) -> BillResponse:
     bill = await repository.create(
         session,
         user_id=user_id,
@@ -182,7 +185,9 @@ async def unpay_bill(session: AsyncSession, user_id: uuid.UUID, bill_id: uuid.UU
     return _to_response(bill, dt.date.today(), None)
 
 
-async def toggle_bill_auto(session: AsyncSession, user_id: uuid.UUID, bill_id: uuid.UUID) -> BillResponse:
+async def toggle_bill_auto(
+    session: AsyncSession, user_id: uuid.UUID, bill_id: uuid.UUID
+) -> BillResponse:
     bill = await repository.get_by_id(session, bill_id, user_id)
     if bill is None:
         raise NotFoundError("Bill not found")

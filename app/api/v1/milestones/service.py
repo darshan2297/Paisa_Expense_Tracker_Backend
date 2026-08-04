@@ -31,7 +31,10 @@ async def create_milestone(
 
 
 async def update_milestone(
-    session: AsyncSession, user_id: uuid.UUID, milestone_id: uuid.UUID, payload: MilestoneUpdateRequest
+    session: AsyncSession,
+    user_id: uuid.UUID,
+    milestone_id: uuid.UUID,
+    payload: MilestoneUpdateRequest,
 ) -> MilestoneResponse:
     m = await repository.get_by_id(session, milestone_id, user_id)
     if m is None:
@@ -42,7 +45,9 @@ async def update_milestone(
     return _to_response(m)
 
 
-async def delete_milestone(session: AsyncSession, user_id: uuid.UUID, milestone_id: uuid.UUID) -> None:
+async def delete_milestone(
+    session: AsyncSession, user_id: uuid.UUID, milestone_id: uuid.UUID
+) -> None:
     m = await repository.get_by_id(session, milestone_id, user_id)
     if m is None:
         raise NotFoundError("Milestone not found")

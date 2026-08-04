@@ -23,7 +23,9 @@ async def list_notifications(
     return await service.list_notifications(session, current_user.id)
 
 
-@notifications_router.patch("/notifications/{notification_id}/read", summary="Mark notification read")
+@notifications_router.patch(
+    "/notifications/{notification_id}/read", summary="Mark notification read"
+)
 @default_limit()
 async def mark_notification_read(
     request: Request,

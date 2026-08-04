@@ -8,7 +8,11 @@ from fastapi import APIRouter, Depends, Query, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.fixed_commitments import service
-from app.api.v1.fixed_commitments.schemas import FixedCommitmentCreateRequest, FixedCommitmentResponse, FixedCommitmentUpdateRequest
+from app.api.v1.fixed_commitments.schemas import (
+    FixedCommitmentCreateRequest,
+    FixedCommitmentResponse,
+    FixedCommitmentUpdateRequest,
+)
 from app.deps import CurrentUser, DefaultAccountId, get_session, list_categories
 from app.middleware.rate_limit import default_limit
 
@@ -60,7 +64,9 @@ async def update_fixed_commitment(
     )
 
 
-@fixed_commitments_router.delete("/{commitment_id}", status_code=204, summary="Delete a fixed commitment")
+@fixed_commitments_router.delete(
+    "/{commitment_id}", status_code=204, summary="Delete a fixed commitment"
+)
 @default_limit()
 async def delete_fixed_commitment(
     request: Request,
@@ -86,4 +92,6 @@ async def toggle_paid(
 ) -> FixedCommitmentResponse:
     categories = await list_categories(session)
     cat_by_id = {c.id: c for c in categories}
-    return await service.toggle_paid(session, current_user.id, commitment_id, month, account_id, cat_by_id)
+    return await service.toggle_paid(
+        session, current_user.id, commitment_id, month, account_id, cat_by_id
+    )

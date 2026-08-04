@@ -16,7 +16,7 @@ from app.api.v1.import_jobs.schemas import (
     ImportRowUpdateRequest,
 )
 from app.core.exceptions import NotFoundError, ValidationError
-from app.deps import DefaultAccountId, list_categories, record_transaction
+from app.deps import list_categories, record_transaction
 
 
 def _parse_csv(content: bytes) -> list[tuple[dt.date, str, Decimal]]:

@@ -29,8 +29,18 @@ def upgrade() -> None:
         sa.Column("date", sa.Date(), nullable=False),
         sa.Column("note", sa.String(length=512), nullable=True),
         sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], name=op.f("fk_ledger_entries_user_id")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_ledger_entries")),
@@ -42,10 +52,22 @@ def upgrade() -> None:
         sa.Column("user_id", sa.UUID(), nullable=False),
         sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column("kind", sa.String(length=16), nullable=False),
-        sa.Column("members", postgresql.JSONB(astext_type=sa.Text()), server_default="[]", nullable=False),
+        sa.Column(
+            "members", postgresql.JSONB(astext_type=sa.Text()), server_default="[]", nullable=False
+        ),
         sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], name=op.f("fk_expense_groups_user_id")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_expense_groups")),
@@ -60,12 +82,26 @@ def upgrade() -> None:
         sa.Column("amount", sa.Numeric(precision=14, scale=2), nullable=False),
         sa.Column("date", sa.Date(), nullable=False),
         sa.Column("split_type", sa.String(length=16), server_default="equal", nullable=False),
-        sa.Column("splits", postgresql.JSONB(astext_type=sa.Text()), server_default="[]", nullable=False),
+        sa.Column(
+            "splits", postgresql.JSONB(astext_type=sa.Text()), server_default="[]", nullable=False
+        ),
         sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
-        sa.ForeignKeyConstraint(["group_id"], ["expense_groups.id"], name=op.f("fk_group_expenses_group_id")),
+        sa.ForeignKeyConstraint(
+            ["group_id"], ["expense_groups.id"], name=op.f("fk_group_expenses_group_id")
+        ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_group_expenses")),
     )
 
@@ -77,10 +113,22 @@ def upgrade() -> None:
         sa.Column("amount", sa.Numeric(precision=14, scale=2), nullable=False),
         sa.Column("date", sa.Date(), nullable=False),
         sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
-        sa.ForeignKeyConstraint(["group_id"], ["expense_groups.id"], name=op.f("fk_group_settlements_group_id")),
+        sa.ForeignKeyConstraint(
+            ["group_id"], ["expense_groups.id"], name=op.f("fk_group_settlements_group_id")
+        ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_group_settlements")),
     )
 
@@ -96,8 +144,18 @@ def upgrade() -> None:
         sa.Column("renewal_date", sa.Date(), nullable=False),
         sa.Column("note", sa.String(length=512), nullable=True),
         sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], name=op.f("fk_policies_user_id")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_policies")),

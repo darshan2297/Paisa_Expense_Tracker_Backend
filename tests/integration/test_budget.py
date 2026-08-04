@@ -3,6 +3,7 @@ Postgres, all middleware) via httpx.AsyncClient.
 """
 
 from collections.abc import AsyncGenerator
+from typing import cast
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -34,7 +35,7 @@ async def auth_headers(client: AsyncClient) -> dict[str, str]:
 async def _category_id(client: AsyncClient, headers: dict[str, str], name: str) -> str:
     response = await client.get("/api/v1/categories", headers=headers)
     categories = response.json()["data"]
-    return next(c["id"] for c in categories if c["name"] == name)
+    return cast(str, next(c["id"] for c in categories if c["name"] == name))
 
 
 async def test_get_budget_requires_authentication(client: AsyncClient) -> None:
@@ -103,7 +104,12 @@ async def test_budget_summary_computes_remaining_against_spent(
     await client.post(
         "/api/v1/transactions",
         headers=auth_headers,
-        json={"type": "expense", "category_id": category_id, "amount": "4000", "date": "2026-08-05"},
+        json={
+            "type": "expense",
+            "category_id": category_id,
+            "amount": "4000",
+            "date": "2026-08-05",
+        },
     )
 
     response = await client.get(

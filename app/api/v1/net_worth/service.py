@@ -23,13 +23,15 @@ from app.api.v1.net_worth.schemas import (
 from app.api.v1.transactions import service as transactions_service
 
 
-async def _compute_totals(session: AsyncSession, user_id: uuid.UUID) -> tuple[Decimal, Decimal, list[NetWorthPart]]:
+async def _compute_totals(
+    session: AsyncSession, user_id: uuid.UUID
+) -> tuple[Decimal, Decimal, list[NetWorthPart]]:
     inv_summary = await investments_service.get_summary(session, user_id)
     assets_summary = await assets_service.get_summary(session, user_id)
     goals = await goals_repo.list_by_user(session, user_id)
     goals_saved = sum((g.saved_amount for g in goals), Decimal("0"))
     loans = await loans_service.list_loans(session, user_id)
-    loan_outstanding = sum((l.outstanding for l in loans), Decimal("0"))
+    loan_outstanding = sum((loan.outstanding for loan in loans), Decimal("0"))
     cards_summary = await cards_service.get_summary(session, user_id)
 
     # Net worth previously counted everything the user OWES (loans, card
@@ -51,7 +53,6 @@ async def _compute_totals(session: AsyncSession, user_id: uuid.UUID) -> tuple[De
     liabilities = loan_outstanding + cards_summary.total_outstanding
 
     total_assets = portfolio + physical_assets + cash_goals + net_receivables
-    net_worth = total_assets - liabilities
 
     parts = [
         NetWorthPart(label="Portfolio", value=portfolio),
@@ -81,7 +82,9 @@ async def get_current(session: AsyncSession, user_id: uuid.UUID) -> NetWorthCurr
     )
 
 
-async def get_history(session: AsyncSession, user_id: uuid.UUID, months: int) -> NetWorthHistoryResponse:
+async def get_history(
+    session: AsyncSession, user_id: uuid.UUID, months: int
+) -> NetWorthHistoryResponse:
     snapshots = await assets_repo.list_snapshots(session, user_id, months)
     points = [
         NetWorthHistoryPoint(

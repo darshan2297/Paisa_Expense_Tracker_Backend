@@ -98,14 +98,14 @@ async def clear_current_flags(session: AsyncSession, user_id: uuid.UUID) -> None
 
 
 async def create_session(session: AsyncSession, **kwargs: object) -> UserSession:
-    s = UserSession(**kwargs)  # type: ignore[arg-type]
+    s = UserSession(**kwargs)
     session.add(s)
     await session.flush()
     return s
 
 
 async def create_backup_record(session: AsyncSession, **kwargs: object) -> Backup:
-    b = Backup(**kwargs)  # type: ignore[arg-type]
+    b = Backup(**kwargs)
     session.add(b)
     await session.flush()
     return b
@@ -147,7 +147,7 @@ async def list_security_events(
 
 
 async def create_security_event(session: AsyncSession, **kwargs: object) -> SecurityEvent:
-    event = SecurityEvent(**kwargs)  # type: ignore[arg-type]
+    event = SecurityEvent(**kwargs)
     session.add(event)
     await session.flush()
     return event

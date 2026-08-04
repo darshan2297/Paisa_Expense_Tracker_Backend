@@ -11,8 +11,8 @@ from app.api.v1.investments.schemas import (
     AllocationItem,
     InvestmentCreateRequest,
     InvestmentResponse,
-    InvestmentUpdateRequest,
     InvestmentsSummaryResponse,
+    InvestmentUpdateRequest,
     UpdateValueRequest,
 )
 from app.core.exceptions import NotFoundError
@@ -66,7 +66,10 @@ async def create_investment(
 
 
 async def update_investment(
-    session: AsyncSession, user_id: uuid.UUID, investment_id: uuid.UUID, payload: InvestmentUpdateRequest
+    session: AsyncSession,
+    user_id: uuid.UUID,
+    investment_id: uuid.UUID,
+    payload: InvestmentUpdateRequest,
 ) -> InvestmentResponse:
     inv = await repository.get_by_id(session, investment_id, user_id)
     if inv is None:
@@ -88,7 +91,9 @@ async def update_value(
     return _to_response(inv)
 
 
-async def delete_investment(session: AsyncSession, user_id: uuid.UUID, investment_id: uuid.UUID) -> None:
+async def delete_investment(
+    session: AsyncSession, user_id: uuid.UUID, investment_id: uuid.UUID
+) -> None:
     inv = await repository.get_by_id(session, investment_id, user_id)
     if inv is None:
         raise NotFoundError("Investment not found")

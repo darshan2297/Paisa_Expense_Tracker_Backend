@@ -27,7 +27,9 @@ async def upload_import(
     session: AsyncSession = Depends(get_session),
 ) -> ImportPreviewResponse:
     content = await file.read()
-    return await service.upload_file(session, current_user.id, file.filename or "import.csv", content)
+    return await service.upload_file(
+        session, current_user.id, file.filename or "import.csv", content
+    )
 
 
 @import_router.get("/{job_id}/preview", summary="Preview import rows")

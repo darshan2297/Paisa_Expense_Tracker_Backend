@@ -11,20 +11,24 @@ from app.api.v1.assets.models import Asset, NetWorthSnapshot
 
 async def list_by_user(session: AsyncSession, user_id: uuid.UUID) -> list[Asset]:
     result = await session.execute(
-        select(Asset).where(Asset.user_id == user_id, Asset.deleted_at.is_(None)).order_by(Asset.name)
+        select(Asset)
+        .where(Asset.user_id == user_id, Asset.deleted_at.is_(None))
+        .order_by(Asset.name)
     )
     return list(result.scalars().all())
 
 
 async def get_by_id(session: AsyncSession, asset_id: uuid.UUID, user_id: uuid.UUID) -> Asset | None:
     result = await session.execute(
-        select(Asset).where(Asset.id == asset_id, Asset.user_id == user_id, Asset.deleted_at.is_(None))
+        select(Asset).where(
+            Asset.id == asset_id, Asset.user_id == user_id, Asset.deleted_at.is_(None)
+        )
     )
     return result.scalar_one_or_none()
 
 
 async def create(session: AsyncSession, user_id: uuid.UUID, **kwargs: object) -> Asset:
-    asset = Asset(user_id=user_id, **kwargs)  # type: ignore[arg-type]
+    asset = Asset(user_id=user_id, **kwargs)
     session.add(asset)
     await session.flush()
     return asset
@@ -48,7 +52,7 @@ async def list_snapshots(
 
 
 async def create_snapshot(session: AsyncSession, **kwargs: object) -> NetWorthSnapshot:
-    snap = NetWorthSnapshot(**kwargs)  # type: ignore[arg-type]
+    snap = NetWorthSnapshot(**kwargs)
     session.add(snap)
     await session.flush()
     return snap

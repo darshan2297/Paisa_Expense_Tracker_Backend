@@ -18,7 +18,11 @@ class Goal(Base, UUIDPKMixin, TimestampMixin, SoftDeleteMixin):
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     target_amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
-    saved_amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False, server_default="0")
-    monthly_contribution: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False, server_default="0")
+    saved_amount: Mapped[Decimal] = mapped_column(
+        Numeric(14, 2), nullable=False, server_default="0"
+    )
+    monthly_contribution: Mapped[Decimal] = mapped_column(
+        Numeric(14, 2), nullable=False, server_default="0"
+    )
     is_emergency: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
     due_day: Mapped[int | None] = mapped_column(Integer, nullable=True)

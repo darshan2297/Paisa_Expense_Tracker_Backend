@@ -23,7 +23,9 @@ async def get_notification(
     session: AsyncSession, notification_id: uuid.UUID, user_id: uuid.UUID
 ) -> Notification | None:
     result = await session.execute(
-        select(Notification).where(Notification.id == notification_id, Notification.user_id == user_id)
+        select(Notification).where(
+            Notification.id == notification_id, Notification.user_id == user_id
+        )
     )
     return result.scalar_one_or_none()
 
@@ -45,13 +47,15 @@ async def mark_all_read(session: AsyncSession, user_id: uuid.UUID) -> None:
 
 
 async def create_notification(session: AsyncSession, **kwargs: object) -> Notification:
-    n = Notification(**kwargs)  # type: ignore[arg-type]
+    n = Notification(**kwargs)
     session.add(n)
     await session.flush()
     return n
 
 
-async def upsert_push_token(session: AsyncSession, user_id: uuid.UUID, token: str, label: str | None) -> PushToken:
+async def upsert_push_token(
+    session: AsyncSession, user_id: uuid.UUID, token: str, label: str | None
+) -> PushToken:
     result = await session.execute(select(PushToken).where(PushToken.expo_push_token == token))
     existing = result.scalar_one_or_none()
     if existing:

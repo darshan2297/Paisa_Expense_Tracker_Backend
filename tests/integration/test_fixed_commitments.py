@@ -3,6 +3,7 @@
 """
 
 from collections.abc import AsyncGenerator
+from typing import cast
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -34,7 +35,7 @@ async def auth_headers(client: AsyncClient) -> dict[str, str]:
 async def _category_id(client: AsyncClient, headers: dict[str, str], name: str) -> str:
     response = await client.get("/api/v1/categories", headers=headers)
     categories = response.json()["data"]
-    return next(c["id"] for c in categories if c["name"] == name)
+    return cast(str, next(c["id"] for c in categories if c["name"] == name))
 
 
 async def _create_commitment(client: AsyncClient, headers: dict[str, str], category_id: str) -> str:
@@ -50,7 +51,7 @@ async def _create_commitment(client: AsyncClient, headers: dict[str, str], categ
         },
     )
     assert response.status_code == 201
-    return response.json()["data"]["id"]
+    return cast(str, response.json()["data"]["id"])
 
 
 async def test_fixed_commitments_requires_authentication(client: AsyncClient) -> None:
@@ -129,7 +130,9 @@ async def test_toggle_paid_again_removes_the_linked_transaction(
     assert transactions_response.json()["data"]["total"] == 0
 
 
-async def test_toggle_paid_is_scoped_per_month(client: AsyncClient, auth_headers: dict[str, str]) -> None:
+async def test_toggle_paid_is_scoped_per_month(
+    client: AsyncClient, auth_headers: dict[str, str]
+) -> None:
     category_id = await _category_id(client, auth_headers, "Rent")
     commitment_id = await _create_commitment(client, auth_headers, category_id)
 

@@ -23,7 +23,9 @@ async def list_by_user(session: AsyncSession, user_id: uuid.UUID) -> list[Expens
     return list(result.scalars().unique().all())
 
 
-async def get_by_id(session: AsyncSession, group_id: uuid.UUID, user_id: uuid.UUID) -> ExpenseGroup | None:
+async def get_by_id(
+    session: AsyncSession, group_id: uuid.UUID, user_id: uuid.UUID
+) -> ExpenseGroup | None:
     result = await session.execute(
         select(ExpenseGroup)
         .where(
@@ -40,7 +42,7 @@ async def get_by_id(session: AsyncSession, group_id: uuid.UUID, user_id: uuid.UU
 
 
 async def create_group(session: AsyncSession, user_id: uuid.UUID, **kwargs: object) -> ExpenseGroup:
-    group = ExpenseGroup(user_id=user_id, **kwargs)  # type: ignore[arg-type]
+    group = ExpenseGroup(user_id=user_id, **kwargs)
     session.add(group)
     await session.flush()
     return group
@@ -51,8 +53,10 @@ async def soft_delete_group(session: AsyncSession, group: ExpenseGroup) -> None:
     await session.flush()
 
 
-async def create_expense(session: AsyncSession, group_id: uuid.UUID, **kwargs: object) -> GroupExpense:
-    expense = GroupExpense(group_id=group_id, **kwargs)  # type: ignore[arg-type]
+async def create_expense(
+    session: AsyncSession, group_id: uuid.UUID, **kwargs: object
+) -> GroupExpense:
+    expense = GroupExpense(group_id=group_id, **kwargs)
     session.add(expense)
     await session.flush()
     return expense
@@ -76,8 +80,10 @@ async def soft_delete_expense(session: AsyncSession, expense: GroupExpense) -> N
     await session.flush()
 
 
-async def create_settlement(session: AsyncSession, group_id: uuid.UUID, **kwargs: object) -> GroupSettlement:
-    settlement = GroupSettlement(group_id=group_id, **kwargs)  # type: ignore[arg-type]
+async def create_settlement(
+    session: AsyncSession, group_id: uuid.UUID, **kwargs: object
+) -> GroupSettlement:
+    settlement = GroupSettlement(group_id=group_id, **kwargs)
     session.add(settlement)
     await session.flush()
     return settlement

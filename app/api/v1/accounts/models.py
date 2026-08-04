@@ -37,7 +37,9 @@ class Account(Base, UUIDPKMixin, TimestampMixin, SoftDeleteMixin):
         PG_UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    kind: Mapped[str] = mapped_column(String(16), nullable=False, server_default=AccountKind.CASH.value)
+    kind: Mapped[str] = mapped_column(
+        String(16), nullable=False, server_default=AccountKind.CASH.value
+    )
 
     # ISO 4217 code - see docs/DATABASE_STANDARDS.md money-column convention.
     # No stored balance column: balance is always derived from transactions

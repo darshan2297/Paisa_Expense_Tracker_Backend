@@ -6,13 +6,12 @@ due within the user's lead window. Push delivery is F17.
 
 import datetime as dt
 import logging
-import uuid
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.api.v1.auth.models import User
-from app.api.v1.budget.models import BudgetSettings
+from app.api.v1.budget.models import BudgetSetting
 from app.api.v1.fixed_commitments.models import FixedCommitment
 from app.core.database import get_engine
 from app.core.redis import get_redis
@@ -49,12 +48,14 @@ async def run_bill_reminders() -> int:
     factory = _session_factory()
 
     async with factory() as session:
-        users = list((await session.execute(select(User).where(User.deleted_at.is_(None)))).scalars())
+        users = list(
+            (await session.execute(select(User).where(User.deleted_at.is_(None)))).scalars()
+        )
         for user in users:
             budget = (
                 await session.execute(
-                    select(BudgetSettings).where(
-                        BudgetSettings.user_id == user.id, BudgetSettings.deleted_at.is_(None)
+                    select(BudgetSetting).where(
+                        BudgetSetting.user_id == user.id, BudgetSetting.deleted_at.is_(None)
                     )
                 )
             ).scalar_one_or_none()
@@ -82,7 +83,11 @@ async def run_bill_reminders() -> int:
                     continue
                 logger.info(
                     "bill reminder queued",
-                    extra={"user_id": str(user.id), "bill_id": str(bill.id), "days_until": days_until},
+                    extra={
+                        "user_id": str(user.id),
+                        "bill_id": str(bill.id),
+                        "days_until": days_until,
+                    },
                 )
                 await _mark_sent(key)
                 sent += 1
@@ -98,12 +103,14 @@ async def run_fixed_commitment_reminders() -> int:
     factory = _session_factory()
 
     async with factory() as session:
-        users = list((await session.execute(select(User).where(User.deleted_at.is_(None)))).scalars())
+        users = list(
+            (await session.execute(select(User).where(User.deleted_at.is_(None)))).scalars()
+        )
         for user in users:
             budget = (
                 await session.execute(
-                    select(BudgetSettings).where(
-                        BudgetSettings.user_id == user.id, BudgetSettings.deleted_at.is_(None)
+                    select(BudgetSetting).where(
+                        BudgetSetting.user_id == user.id, BudgetSetting.deleted_at.is_(None)
                     )
                 )
             ).scalar_one_or_none()
@@ -152,7 +159,9 @@ async def run_bill_rollover() -> int:
     factory = _session_factory()
 
     async with factory() as session:
-        users = list((await session.execute(select(User).where(User.deleted_at.is_(None)))).scalars())
+        users = list(
+            (await session.execute(select(User).where(User.deleted_at.is_(None)))).scalars()
+        )
         for user in users:
             total += await bills_service.rollover_paid_bills(session, user.id)
         await session.commit()
@@ -167,12 +176,14 @@ async def run_policy_reminders() -> int:
     factory = _session_factory()
 
     async with factory() as session:
-        users = list((await session.execute(select(User).where(User.deleted_at.is_(None)))).scalars())
+        users = list(
+            (await session.execute(select(User).where(User.deleted_at.is_(None)))).scalars()
+        )
         for user in users:
             budget = (
                 await session.execute(
-                    select(BudgetSettings).where(
-                        BudgetSettings.user_id == user.id, BudgetSettings.deleted_at.is_(None)
+                    select(BudgetSetting).where(
+                        BudgetSetting.user_id == user.id, BudgetSetting.deleted_at.is_(None)
                     )
                 )
             ).scalar_one_or_none()
@@ -209,7 +220,9 @@ async def run_net_worth_snapshots() -> int:
     factory = _session_factory()
 
     async with factory() as session:
-        users = list((await session.execute(select(User).where(User.deleted_at.is_(None)))).scalars())
+        users = list(
+            (await session.execute(select(User).where(User.deleted_at.is_(None)))).scalars()
+        )
         for user in users:
             await net_worth_service.create_snapshot(session, user.id)
             count += 1

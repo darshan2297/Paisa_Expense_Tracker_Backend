@@ -66,7 +66,7 @@ async def set_values(
 
         if option.allowed_values is not None:
             allowed = repository.parse_allowed_values(option.allowed_values)
-            if value not in allowed:
+            if allowed is not None and value not in allowed:
                 raise ValidationError(f"{key} must be one of {allowed}")
 
         serialized = serialize_value(value, option.value_type)
@@ -92,7 +92,9 @@ async def build_profile_config(session: AsyncSession) -> dict[str, object]:
     currency_opt = next((c for c in catalog if c.key == "currency"), None)
 
     auto_logout_options = (
-        repository.parse_allowed_values(auto_logout.allowed_values) if auto_logout else [1, 5, 15, 30]
+        repository.parse_allowed_values(auto_logout.allowed_values)
+        if auto_logout
+        else [1, 5, 15, 30]
     )
     currencies = (
         repository.parse_allowed_values(currency_opt.allowed_values) if currency_opt else ["INR"]

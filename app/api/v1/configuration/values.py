@@ -9,7 +9,9 @@ def serialize_value(value: object, value_type: str) -> str:
             raise ValidationError(f"Expected boolean value, got {type(value).__name__}")
         return "true" if value else "false"
     if value_type == "integer":
-        return str(int(value))  # type: ignore[arg-type]
+        if not isinstance(value, int):
+            raise ValidationError(f"Expected integer value, got {type(value).__name__}")
+        return str(value)
     if value_type == "string":
         return str(value)
     raise ValidationError(f"Unsupported configuration value_type: {value_type}")

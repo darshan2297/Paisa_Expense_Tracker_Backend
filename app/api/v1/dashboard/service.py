@@ -60,7 +60,9 @@ async def get_life_dashboard(
     daily_rate = expense / days_elapsed if days_elapsed else Decimal("0")
     predicted = daily_rate * days_in_month
     expected_savings = income - predicted
-    safe_daily = budget_left / days_remaining if days_remaining and budget_left > 0 else Decimal("0")
+    safe_daily = (
+        budget_left / days_remaining if days_remaining and budget_left > 0 else Decimal("0")
+    )
 
     cats = await list_categories(session)
     cat_by_id = {c.id: c for c in cats}
@@ -131,7 +133,11 @@ async def get_life_dashboard(
             value=f"₹{expense}",
             sub=f"{budget_used_pct:.0f}% of budget",
         ),
-        LifeMetric(label="Saved this month", value=f"₹{income - expense}", sub=f"{savings_rate:.0f}% savings rate"),
+        LifeMetric(
+            label="Saved this month",
+            value=f"₹{income - expense}",
+            sub=f"{savings_rate:.0f}% savings rate",
+        ),
         LifeMetric(
             label="Portfolio value",
             value=f"₹{inv.portfolio_total}",
@@ -139,7 +145,11 @@ async def get_life_dashboard(
         ),
         LifeMetric(label="Bank & cash", value=f"₹{cash_total}", sub="liquid right now"),
         LifeMetric(label="Assets", value=f"₹{assets.total_value}", sub=f"{assets.count} tracked"),
-        LifeMetric(label="Loan outstanding", value=f"₹{loans.total_outstanding}", sub=f"{loans.active_count} active loans"),
+        LifeMetric(
+            label="Loan outstanding",
+            value=f"₹{loans.total_outstanding}",
+            sub=f"{loans.active_count} active loans",
+        ),
         LifeMetric(
             label="Emergency fund",
             value=f"{emergency.months_of_expenses_covered:.1f} mo",
@@ -174,9 +184,11 @@ async def get_life_dashboard(
             over_budget=predicted > budget,
             safe_daily=safe_daily.quantize(Decimal("0.01")),
             expected_savings=expected_savings.quantize(Decimal("0.01")),
-            note=f"At this pace you will finish ₹{max(predicted - budget, Decimal('0'))} over budget."
-            if predicted > budget
-            else "On track to stay within budget.",
+            note=(
+                f"At this pace you will finish ₹{max(predicted - budget, Decimal('0'))} over budget."
+                if predicted > budget
+                else "On track to stay within budget."
+            ),
         ),
         life_tiles=life_tiles,
         recent=recent,

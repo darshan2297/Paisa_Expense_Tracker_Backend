@@ -92,7 +92,11 @@ async def test_repeated_login_reuses_same_device_session(
     )
     assert overview.status_code == 200
     sessions = overview.json()["data"]["sessions"]
-    chrome = [s for s in sessions if s.get("user_agent") == headers["User-Agent"] or "Chrome" in s["device_label"]]
+    chrome = [
+        s
+        for s in sessions
+        if s.get("user_agent") == headers["User-Agent"] or "Chrome" in s["device_label"]
+    ]
     assert len(chrome) == 1
     assert chrome[0]["is_current"] is True
 

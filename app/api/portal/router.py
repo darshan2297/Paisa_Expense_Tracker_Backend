@@ -80,7 +80,9 @@ def _render_groups(groups: list[dict[str, Any]]) -> str:
         )
     remaining = sum(len(g["endpoints"]) for g in groups[8:])
     if remaining:
-        parts.append(f'<div class="surface-more">+ {remaining} more endpoints — <a href="/docs">/docs</a></div>')
+        parts.append(
+            f'<div class="surface-more">+ {remaining} more endpoints — <a href="/docs">/docs</a></div>'
+        )
     return "\n".join(parts)
 
 

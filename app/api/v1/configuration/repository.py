@@ -8,10 +8,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.v1.configuration.models import Configuration, UserConfiguration
+from app.core.exceptions import ValidationError
 
 
 async def list_catalog(session: AsyncSession) -> list[Configuration]:
-    result = await session.execute(select(Configuration).order_by(Configuration.category, Configuration.key))
+    result = await session.execute(
+        select(Configuration).order_by(Configuration.category, Configuration.key)
+    )
     return list(result.scalars().all())
 
 
@@ -20,7 +23,9 @@ async def get_by_key(session: AsyncSession, key: str) -> Configuration | None:
     return result.scalar_one_or_none()
 
 
-async def list_user_values(session: AsyncSession, user_id: uuid.UUID | str) -> list[UserConfiguration]:
+async def list_user_values(
+    session: AsyncSession, user_id: uuid.UUID | str
+) -> list[UserConfiguration]:
     result = await session.execute(
         select(UserConfiguration)
         .where(UserConfiguration.user_id == user_id)
@@ -54,7 +59,7 @@ async def upsert_user_value(
         return existing
 
     row = UserConfiguration(
-        user_id=user_id,  # type: ignore[arg-type]
+        user_id=user_id,
         configuration_id=configuration.id,
         value=value,
     )

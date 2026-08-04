@@ -2,7 +2,6 @@
 
 import datetime as dt
 import uuid
-from decimal import Decimal
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,7 +18,9 @@ async def list_by_user(session: AsyncSession, user_id: uuid.UUID) -> list[Invest
     return list(result.scalars().all())
 
 
-async def get_by_id(session: AsyncSession, investment_id: uuid.UUID, user_id: uuid.UUID) -> Investment | None:
+async def get_by_id(
+    session: AsyncSession, investment_id: uuid.UUID, user_id: uuid.UUID
+) -> Investment | None:
     result = await session.execute(
         select(Investment).where(
             Investment.id == investment_id,
@@ -31,7 +32,7 @@ async def get_by_id(session: AsyncSession, investment_id: uuid.UUID, user_id: uu
 
 
 async def create(session: AsyncSession, user_id: uuid.UUID, **kwargs: object) -> Investment:
-    inv = Investment(user_id=user_id, **kwargs)  # type: ignore[arg-type]
+    inv = Investment(user_id=user_id, **kwargs)
     session.add(inv)
     await session.flush()
     return inv

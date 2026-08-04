@@ -18,11 +18,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # can detect them.
 from app.api.v1.accounts import models as _accounts_models  # noqa: E402, F401
 from app.api.v1.auth import models as _auth_models  # noqa: E402, F401
-from app.api.v1.configuration import models as _configuration_models  # noqa: E402, F401
 from app.api.v1.bills import models as _bills_models  # noqa: E402, F401
 from app.api.v1.budget import models as _budget_models  # noqa: E402, F401
 from app.api.v1.cards import models as _cards_models  # noqa: E402, F401
 from app.api.v1.categories import models as _categories_models  # noqa: E402, F401
+from app.api.v1.configuration import models as _configuration_models  # noqa: E402, F401
 from app.api.v1.fixed_commitments import models as _fixed_commitments_models  # noqa: E402, F401
 from app.api.v1.transactions import models as _transactions_models  # noqa: E402, F401
 from app.core.base_model import Base  # noqa: E402

@@ -43,11 +43,15 @@ async def login_history(
     session: AsyncSession = Depends(get_session),
     from_date: Annotated[
         dt.date | None,
-        Query(description="Inclusive start date (YYYY-MM-DD). Defaults to today when omitted with to_date."),
+        Query(
+            description="Inclusive start date (YYYY-MM-DD). Defaults to today when omitted with to_date."
+        ),
     ] = None,
     to_date: Annotated[
         dt.date | None,
-        Query(description="Inclusive end date (YYYY-MM-DD). Defaults to today when omitted with from_date."),
+        Query(
+            description="Inclusive end date (YYYY-MM-DD). Defaults to today when omitted with from_date."
+        ),
     ] = None,
 ) -> LoginHistoryListResponse:
     # Default both ends to today so the Security screen shows today's events

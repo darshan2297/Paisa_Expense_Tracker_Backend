@@ -35,7 +35,9 @@ async def test_list_goals_empty(client: AsyncClient, auth_headers: dict[str, str
     assert response.json()["data"] == []
 
 
-async def test_create_and_contribute_goal(client: AsyncClient, auth_headers: dict[str, str]) -> None:
+async def test_create_and_contribute_goal(
+    client: AsyncClient, auth_headers: dict[str, str]
+) -> None:
     create_response = await client.post(
         "/api/v1/goals",
         headers=auth_headers,
@@ -87,7 +89,12 @@ async def test_goals_summary(client: AsyncClient, auth_headers: dict[str, str]) 
     await client.post(
         "/api/v1/goals",
         headers=auth_headers,
-        json={"name": "Laptop", "target_amount": "120000", "saved_amount": "96000", "monthly_contribution": "6000"},
+        json={
+            "name": "Laptop",
+            "target_amount": "120000",
+            "saved_amount": "96000",
+            "monthly_contribution": "6000",
+        },
     )
 
     response = await client.get("/api/v1/goals/summary", headers=auth_headers)

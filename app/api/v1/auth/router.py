@@ -14,7 +14,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.auth import repository, service
 from app.api.v1.auth.deps import CurrentUser
-from app.api.v1.configuration import service as config_service
 from app.api.v1.auth.schemas import (
     ChangePasswordRequest,
     LoginRequest,
@@ -31,6 +30,7 @@ from app.api.v1.auth.schemas import (
     RegisterRequest,
     TokenPairResponse,
 )
+from app.api.v1.configuration import service as config_service
 from app.core.database import get_session
 from app.middleware.rate_limit import default_limit, strict_limit
 
@@ -152,9 +152,7 @@ async def change_pin(
     current_user: CurrentUser,
     session: AsyncSession = Depends(get_session),
 ) -> PinStatusResponse:
-    return await service.change_pin(
-        session, current_user, payload.current_pin, payload.new_pin
-    )
+    return await service.change_pin(session, current_user, payload.current_pin, payload.new_pin)
 
 
 @auth_router.post("/pin/verify", summary="Verify the account app PIN")

@@ -41,9 +41,7 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["user_id"], ["users.id"], name=op.f("fk_budget_settings_user_id")
-        ),
+        sa.ForeignKeyConstraint(["user_id"], ["users.id"], name=op.f("fk_budget_settings_user_id")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_budget_settings")),
         sa.UniqueConstraint("user_id", name=op.f("uq_budget_settings_user_id")),
     )

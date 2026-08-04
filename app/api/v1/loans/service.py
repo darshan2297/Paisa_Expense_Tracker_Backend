@@ -16,7 +16,6 @@ from app.api.v1.loans.schemas import (
     PrepayResponse,
     ScheduleRow,
     build_schedule,
-    compute_emi,
 )
 from app.core.exceptions import NotFoundError, ValidationError
 from app.deps import get_month_totals
@@ -31,10 +30,12 @@ async def list_loans(session: AsyncSession, user_id: uuid.UUID) -> list[LoanResp
     return [_to_response(r) for r in rows]
 
 
-async def get_summary(session: AsyncSession, user_id: uuid.UUID, month: str) -> LoansSummaryResponse:
+async def get_summary(
+    session: AsyncSession, user_id: uuid.UUID, month: str
+) -> LoansSummaryResponse:
     loans = await list_loans(session, user_id)
-    total_outstanding = sum((l.outstanding for l in loans), Decimal("0"))
-    total_emi = sum((l.emi for l in loans), Decimal("0"))
+    total_outstanding = sum((loan.outstanding for loan in loans), Decimal("0"))
+    total_emi = sum((loan.emi for loan in loans), Decimal("0"))
     income, _expense = await get_month_totals(session, user_id, month)
     dti = float(total_emi / income * 100) if income else 0.0
     return LoansSummaryResponse(
@@ -101,13 +102,17 @@ async def prepay(
     if payload.amount > loan.outstanding:
         raise ValidationError("Prepayment exceeds outstanding balance")
 
-    old_schedule = build_schedule(loan.principal, loan.rate_pct, loan.tenure_months, loan.outstanding)
+    old_schedule = build_schedule(
+        loan.principal, loan.rate_pct, loan.tenure_months, loan.outstanding
+    )
     old_interest = sum((r.interest for r in old_schedule), Decimal("0"))
 
     loan.outstanding = (loan.outstanding - payload.amount).quantize(Decimal("0.01"))
     await session.flush()
 
-    new_schedule = build_schedule(loan.principal, loan.rate_pct, loan.tenure_months, loan.outstanding)
+    new_schedule = build_schedule(
+        loan.principal, loan.rate_pct, loan.tenure_months, loan.outstanding
+    )
     new_interest = sum((r.interest for r in new_schedule), Decimal("0"))
     interest_saved = max(old_interest - new_interest, Decimal("0"))
 

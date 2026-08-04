@@ -43,7 +43,9 @@ async def list_transactions(
 ) -> TransactionListResponse:
     categories = await list_categories(session)
     cat_by_id = {c.id: c for c in categories}
-    return await service.list_transactions(session, current_user.id, month, type_filter, q, params, cat_by_id)
+    return await service.list_transactions(
+        session, current_user.id, month, type_filter, q, params, cat_by_id
+    )
 
 
 @transactions_router.get("/summary", summary="Income/expense/category totals for a month")
@@ -73,7 +75,9 @@ async def create_transaction(
 ) -> TransactionResponse:
     categories = await list_categories(session)
     cat_by_id = {c.id: c for c in categories}
-    return await service.create_transaction(session, current_user.id, account_id, payload, cat_by_id)
+    return await service.create_transaction(
+        session, current_user.id, account_id, payload, cat_by_id
+    )
 
 
 @transactions_router.patch("/{transaction_id}", summary="Update a transaction")
@@ -118,9 +122,7 @@ async def upload_receipt(
 ) -> TransactionResponse:
     categories = await list_categories(session)
     cat_by_id = {c.id: c for c in categories}
-    return await service.attach_receipt(
-        session, current_user.id, transaction_id, file, cat_by_id
-    )
+    return await service.attach_receipt(session, current_user.id, transaction_id, file, cat_by_id)
 
 
 @transactions_router.get(

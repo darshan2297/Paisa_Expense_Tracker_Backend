@@ -24,7 +24,7 @@ async def get_by_id(session: AsyncSession, loan_id: uuid.UUID, user_id: uuid.UUI
 
 
 async def create(session: AsyncSession, user_id: uuid.UUID, **kwargs: object) -> Loan:
-    loan = Loan(user_id=user_id, **kwargs)  # type: ignore[arg-type]
+    loan = Loan(user_id=user_id, **kwargs)
     session.add(loan)
     await session.flush()
     return loan

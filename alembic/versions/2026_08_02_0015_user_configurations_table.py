@@ -56,7 +56,9 @@ def upgrade() -> None:
             server_default=sa.text("now()"),
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(["user_id"], ["users.id"], name=op.f("fk_user_configurations_user_id")),
+        sa.ForeignKeyConstraint(
+            ["user_id"], ["users.id"], name=op.f("fk_user_configurations_user_id")
+        ),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_user_configurations")),
         sa.UniqueConstraint("user_id", name=op.f("uq_user_configurations_user_id")),
     )
@@ -111,43 +113,73 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.add_column("users", sa.Column("currency", sa.String(length=3), server_default="INR", nullable=False))
-    op.add_column("users", sa.Column("month_start_day", sa.Integer(), server_default="1", nullable=False))
-    op.add_column("users", sa.Column("dark_mode", sa.Boolean(), server_default="false", nullable=False))
+    op.add_column(
+        "users", sa.Column("currency", sa.String(length=3), server_default="INR", nullable=False)
+    )
+    op.add_column(
+        "users", sa.Column("month_start_day", sa.Integer(), server_default="1", nullable=False)
+    )
+    op.add_column(
+        "users", sa.Column("dark_mode", sa.Boolean(), server_default="false", nullable=False)
+    )
     op.add_column(
         "users", sa.Column("week_start_monday", sa.Boolean(), server_default="true", nullable=False)
     )
     op.add_column(
         "users", sa.Column("round_up_savings", sa.Boolean(), server_default="false", nullable=False)
     )
-    op.add_column("users", sa.Column("digest_enabled", sa.Boolean(), server_default="true", nullable=False))
-    op.add_column("users", sa.Column("sound_enabled", sa.Boolean(), server_default="true", nullable=False))
-    op.add_column("users", sa.Column("pin_lock_enabled", sa.Boolean(), server_default="true", nullable=False))
     op.add_column(
-        "users", sa.Column("fingerprint_login_enabled", sa.Boolean(), server_default="true", nullable=False)
-    )
-    op.add_column("users", sa.Column("face_id_enabled", sa.Boolean(), server_default="false", nullable=False))
-    op.add_column(
-        "users", sa.Column("password_protection_enabled", sa.Boolean(), server_default="true", nullable=False)
+        "users", sa.Column("digest_enabled", sa.Boolean(), server_default="true", nullable=False)
     )
     op.add_column(
-        "users", sa.Column("hide_sensitive_amounts", sa.Boolean(), server_default="false", nullable=False)
+        "users", sa.Column("sound_enabled", sa.Boolean(), server_default="true", nullable=False)
     )
     op.add_column(
-        "users", sa.Column("privacy_mode_enabled", sa.Boolean(), server_default="false", nullable=False)
-    )
-    op.add_column("users", sa.Column("auto_lock_enabled", sa.Boolean(), server_default="true", nullable=False))
-    op.add_column(
-        "users", sa.Column("cloud_backup_enabled", sa.Boolean(), server_default="true", nullable=False)
+        "users", sa.Column("pin_lock_enabled", sa.Boolean(), server_default="true", nullable=False)
     )
     op.add_column(
-        "users", sa.Column("local_backup_enabled", sa.Boolean(), server_default="false", nullable=False)
+        "users",
+        sa.Column("fingerprint_login_enabled", sa.Boolean(), server_default="true", nullable=False),
     )
     op.add_column(
-        "users", sa.Column("e2e_encryption_enabled", sa.Boolean(), server_default="true", nullable=False)
+        "users", sa.Column("face_id_enabled", sa.Boolean(), server_default="false", nullable=False)
     )
-    op.add_column("users", sa.Column("two_factor_enabled", sa.Boolean(), server_default="true", nullable=False))
-    op.add_column("users", sa.Column("auto_logout_minutes", sa.Integer(), server_default="5", nullable=False))
+    op.add_column(
+        "users",
+        sa.Column(
+            "password_protection_enabled", sa.Boolean(), server_default="true", nullable=False
+        ),
+    )
+    op.add_column(
+        "users",
+        sa.Column("hide_sensitive_amounts", sa.Boolean(), server_default="false", nullable=False),
+    )
+    op.add_column(
+        "users",
+        sa.Column("privacy_mode_enabled", sa.Boolean(), server_default="false", nullable=False),
+    )
+    op.add_column(
+        "users", sa.Column("auto_lock_enabled", sa.Boolean(), server_default="true", nullable=False)
+    )
+    op.add_column(
+        "users",
+        sa.Column("cloud_backup_enabled", sa.Boolean(), server_default="true", nullable=False),
+    )
+    op.add_column(
+        "users",
+        sa.Column("local_backup_enabled", sa.Boolean(), server_default="false", nullable=False),
+    )
+    op.add_column(
+        "users",
+        sa.Column("e2e_encryption_enabled", sa.Boolean(), server_default="true", nullable=False),
+    )
+    op.add_column(
+        "users",
+        sa.Column("two_factor_enabled", sa.Boolean(), server_default="true", nullable=False),
+    )
+    op.add_column(
+        "users", sa.Column("auto_logout_minutes", sa.Integer(), server_default="5", nullable=False)
+    )
 
     op.execute(
         sa.text(

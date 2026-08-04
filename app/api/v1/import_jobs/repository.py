@@ -4,7 +4,6 @@ import uuid
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.api.v1.import_jobs.models import ImportJob, ImportRow
 
@@ -29,7 +28,7 @@ async def list_rows(session: AsyncSession, job_id: uuid.UUID) -> list[ImportRow]
 
 
 async def add_row(session: AsyncSession, **kwargs: object) -> ImportRow:
-    row = ImportRow(**kwargs)  # type: ignore[arg-type]
+    row = ImportRow(**kwargs)
     session.add(row)
     await session.flush()
     return row

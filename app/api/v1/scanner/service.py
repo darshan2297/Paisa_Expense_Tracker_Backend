@@ -4,23 +4,25 @@ import datetime as dt
 import re
 import uuid
 from decimal import Decimal
+from typing import cast
 
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.v1.categories.schemas import CategoryResponse
 from app.api.v1.scanner.schemas import ScanConfirmRequest, ScanLineItem, ScanResponse
-from app.api.v1.transactions.schemas import TransactionResponse
-from app.deps import DefaultAccountId, list_categories, record_transaction
+from app.deps import record_transaction
 
 
 def _extract_text(content: bytes) -> str:
     try:
-        import pytesseract  # type: ignore[import-untyped]
-        from PIL import Image  # type: ignore[import-untyped]
         import io
 
+        import pytesseract
+        from PIL import Image
+
         image = Image.open(io.BytesIO(content))
-        return pytesseract.image_to_string(image)
+        return cast(str, pytesseract.image_to_string(image))
     except Exception:
         return ""
 
@@ -64,7 +66,7 @@ async def confirm_scan(
     user_id: uuid.UUID,
     account_id: uuid.UUID,
     payload: ScanConfirmRequest,
-    cat_by_id: dict,
+    cat_by_id: dict[uuid.UUID, CategoryResponse],
 ) -> uuid.UUID:
     txn_id = await record_transaction(
         session,

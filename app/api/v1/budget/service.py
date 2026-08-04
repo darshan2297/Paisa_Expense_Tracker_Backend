@@ -66,13 +66,19 @@ def _days_remaining_in_month(month: str) -> int:
     return 1  # a fully past month - "per day left" isn't meaningful there
 
 
-async def get_summary(session: AsyncSession, user_id: uuid.UUID, month: str) -> BudgetSummaryResponse:
+async def get_summary(
+    session: AsyncSession, user_id: uuid.UUID, month: str
+) -> BudgetSummaryResponse:
     setting = await get_settings(session, user_id)
     _income, spent = await get_month_totals(session, user_id, month)
     remaining = setting.monthly_amount - spent
-    pct_remaining = float(remaining / setting.monthly_amount * 100) if setting.monthly_amount else 0.0
+    pct_remaining = (
+        float(remaining / setting.monthly_amount * 100) if setting.monthly_amount else 0.0
+    )
     days_remaining = _days_remaining_in_month(month)
-    alert_threshold = setting.monthly_amount * setting.alert_pct / 100 if setting.monthly_amount else Decimal("0")
+    alert_threshold = (
+        setting.monthly_amount * setting.alert_pct / 100 if setting.monthly_amount else Decimal("0")
+    )
     alert_triggered = remaining <= alert_threshold and setting.monthly_amount > 0
     over_by = max(spent - setting.monthly_amount, Decimal("0"))
 

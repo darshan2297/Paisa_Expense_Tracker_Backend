@@ -12,8 +12,8 @@ from app.api.v1.auth.schemas import (
     ProfileUpdateRequest,
     TokenPairResponse,
 )
-from app.api.v1.configuration.catalog import PROFILE_CONFIG_KEYS
 from app.api.v1.configuration import service as config_service
+from app.api.v1.configuration.catalog import PROFILE_CONFIG_KEYS
 from app.core.exceptions import ConflictError, UnauthorizedError, ValidationError
 from app.core.security import (
     TokenType,
@@ -26,6 +26,12 @@ from app.core.security import (
 from app.deps import ensure_default_account
 
 _PROFILE_FIELDS = frozenset({"name", "phone", "city", "occupation"})
+
+
+def _as_int(value: object) -> int:
+    if isinstance(value, int):
+        return value
+    raise TypeError(f"Expected int, got {type(value).__name__}")
 
 
 def _issue_token_pair(user: User) -> TokenPairResponse:
@@ -46,7 +52,7 @@ def _to_profile_response(user: User, values: dict[str, object]) -> ProfileRespon
         city=user.city,
         occupation=user.occupation,
         currency=str(values["currency"]),
-        month_start_day=int(values["month_start_day"]),  # type: ignore[arg-type]
+        month_start_day=_as_int(values["month_start_day"]),
         dark_mode=bool(values["dark_mode"]),
         week_start_monday=bool(values["week_start_monday"]),
         round_up_savings=bool(values["round_up_savings"]),

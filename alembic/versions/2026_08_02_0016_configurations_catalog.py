@@ -6,8 +6,8 @@ Create Date: 2026-08-02 23:30:00.000000
 
 """
 
-from collections.abc import Sequence
 import uuid
+from collections.abc import Sequence
 
 import sqlalchemy as sa
 
@@ -20,24 +20,144 @@ depends_on: str | Sequence[str] | None = None
 
 CATALOG_ROWS = [
     ("currency", "preferences", "string", "INR", "Currency", "ISO 4217 currency code", '["INR"]'),
-    ("month_start_day", "preferences", "integer", "1", "Month start day", "Budget month start day (1-28)", None),
+    (
+        "month_start_day",
+        "preferences",
+        "integer",
+        "1",
+        "Month start day",
+        "Budget month start day (1-28)",
+        None,
+    ),
     ("dark_mode", "preferences", "boolean", "false", "Dark mode", "Use dark theme", None),
-    ("week_start_monday", "preferences", "boolean", "true", "Week starts Monday", "Calendar weeks begin on Monday", None),
-    ("round_up_savings", "preferences", "boolean", "false", "Round-up savings", "Round expenses and save spare change", None),
-    ("digest_enabled", "preferences", "boolean", "true", "Weekly digest", "Weekly spending summary", None),
-    ("sound_enabled", "preferences", "boolean", "true", "Sound effects", "Play sounds for actions", None),
+    (
+        "week_start_monday",
+        "preferences",
+        "boolean",
+        "true",
+        "Week starts Monday",
+        "Calendar weeks begin on Monday",
+        None,
+    ),
+    (
+        "round_up_savings",
+        "preferences",
+        "boolean",
+        "false",
+        "Round-up savings",
+        "Round expenses and save spare change",
+        None,
+    ),
+    (
+        "digest_enabled",
+        "preferences",
+        "boolean",
+        "true",
+        "Weekly digest",
+        "Weekly spending summary",
+        None,
+    ),
+    (
+        "sound_enabled",
+        "preferences",
+        "boolean",
+        "true",
+        "Sound effects",
+        "Play sounds for actions",
+        None,
+    ),
     ("pin_lock_enabled", "security", "boolean", "true", "PIN lock", "6-digit PIN on launch", None),
-    ("fingerprint_login_enabled", "security", "boolean", "true", "Fingerprint login", "Unlock with fingerprint", None),
+    (
+        "fingerprint_login_enabled",
+        "security",
+        "boolean",
+        "true",
+        "Fingerprint login",
+        "Unlock with fingerprint",
+        None,
+    ),
     ("face_id_enabled", "security", "boolean", "false", "Face ID", "Unlock with face", None),
-    ("password_protection_enabled", "security", "boolean", "true", "Password protection", "Fallback password for new devices", None),
-    ("hide_sensitive_amounts", "security", "boolean", "false", "Hide sensitive amounts", "Blur balances until tapped", None),
-    ("privacy_mode_enabled", "security", "boolean", "false", "Privacy mode", "Hide values when app loses focus", None),
-    ("auto_lock_enabled", "security", "boolean", "true", "Auto lock", "Lock after session timeout", None),
-    ("cloud_backup_enabled", "security", "boolean", "true", "Cloud backup", "Encrypted nightly cloud backup", None),
-    ("local_backup_enabled", "security", "boolean", "false", "Local backup", "Keep a copy on device", None),
-    ("e2e_encryption_enabled", "security", "boolean", "true", "End-to-end encryption", "User-held decryption key", None),
-    ("two_factor_enabled", "security", "boolean", "true", "Two-factor authentication", "OTP on new sign-ins", None),
-    ("auto_logout_minutes", "security", "integer", "5", "Auto-logout after", "Inactivity timeout in minutes", "[1,5,15,30]"),
+    (
+        "password_protection_enabled",
+        "security",
+        "boolean",
+        "true",
+        "Password protection",
+        "Fallback password for new devices",
+        None,
+    ),
+    (
+        "hide_sensitive_amounts",
+        "security",
+        "boolean",
+        "false",
+        "Hide sensitive amounts",
+        "Blur balances until tapped",
+        None,
+    ),
+    (
+        "privacy_mode_enabled",
+        "security",
+        "boolean",
+        "false",
+        "Privacy mode",
+        "Hide values when app loses focus",
+        None,
+    ),
+    (
+        "auto_lock_enabled",
+        "security",
+        "boolean",
+        "true",
+        "Auto lock",
+        "Lock after session timeout",
+        None,
+    ),
+    (
+        "cloud_backup_enabled",
+        "security",
+        "boolean",
+        "true",
+        "Cloud backup",
+        "Encrypted nightly cloud backup",
+        None,
+    ),
+    (
+        "local_backup_enabled",
+        "security",
+        "boolean",
+        "false",
+        "Local backup",
+        "Keep a copy on device",
+        None,
+    ),
+    (
+        "e2e_encryption_enabled",
+        "security",
+        "boolean",
+        "true",
+        "End-to-end encryption",
+        "User-held decryption key",
+        None,
+    ),
+    (
+        "two_factor_enabled",
+        "security",
+        "boolean",
+        "true",
+        "Two-factor authentication",
+        "OTP on new sign-ins",
+        None,
+    ),
+    (
+        "auto_logout_minutes",
+        "security",
+        "integer",
+        "5",
+        "Auto-logout after",
+        "Inactivity timeout in minutes",
+        "[1,5,15,30]",
+    ),
 ]
 
 FLAT_COLUMN_MAP = [
@@ -49,9 +169,15 @@ FLAT_COLUMN_MAP = [
     ("digest_enabled", "CASE WHEN digest_enabled THEN 'true' ELSE 'false' END"),
     ("sound_enabled", "CASE WHEN sound_enabled THEN 'true' ELSE 'false' END"),
     ("pin_lock_enabled", "CASE WHEN pin_lock_enabled THEN 'true' ELSE 'false' END"),
-    ("fingerprint_login_enabled", "CASE WHEN fingerprint_login_enabled THEN 'true' ELSE 'false' END"),
+    (
+        "fingerprint_login_enabled",
+        "CASE WHEN fingerprint_login_enabled THEN 'true' ELSE 'false' END",
+    ),
     ("face_id_enabled", "CASE WHEN face_id_enabled THEN 'true' ELSE 'false' END"),
-    ("password_protection_enabled", "CASE WHEN password_protection_enabled THEN 'true' ELSE 'false' END"),
+    (
+        "password_protection_enabled",
+        "CASE WHEN password_protection_enabled THEN 'true' ELSE 'false' END",
+    ),
     ("hide_sensitive_amounts", "CASE WHEN hide_sensitive_amounts THEN 'true' ELSE 'false' END"),
     ("privacy_mode_enabled", "CASE WHEN privacy_mode_enabled THEN 'true' ELSE 'false' END"),
     ("auto_lock_enabled", "CASE WHEN auto_lock_enabled THEN 'true' ELSE 'false' END"),
@@ -95,7 +221,9 @@ def upgrade() -> None:
             sa.PrimaryKeyConstraint("id", name=op.f("pk_configurations")),
             sa.UniqueConstraint("key", name=op.f("uq_configurations_key")),
         )
-        op.create_index(op.f("ix_configurations_category"), "configurations", ["category"], unique=False)
+        op.create_index(
+            op.f("ix_configurations_category"), "configurations", ["category"], unique=False
+        )
         op.create_index(op.f("ix_configurations_key"), "configurations", ["key"], unique=False)
 
         configurations = sa.table(
@@ -146,9 +274,13 @@ def upgrade() -> None:
                 nullable=False,
             ),
             sa.ForeignKeyConstraint(
-                ["configuration_id"], ["configurations.id"], name=op.f("fk_user_configuration_values_configuration_id")
+                ["configuration_id"],
+                ["configurations.id"],
+                name=op.f("fk_user_configuration_values_configuration_id"),
             ),
-            sa.ForeignKeyConstraint(["user_id"], ["users.id"], name=op.f("fk_user_configuration_values_user_id")),
+            sa.ForeignKeyConstraint(
+                ["user_id"], ["users.id"], name=op.f("fk_user_configuration_values_user_id")
+            ),
             sa.PrimaryKeyConstraint("id", name=op.f("pk_user_configuration_values")),
             sa.UniqueConstraint(
                 "user_id", "configuration_id", name=op.f("uq_user_configuration_values_user_option")
@@ -161,7 +293,10 @@ def upgrade() -> None:
             unique=False,
         )
         op.create_index(
-            op.f("ix_user_configuration_values_user_id"), "user_configuration_values", ["user_id"], unique=False
+            op.f("ix_user_configuration_values_user_id"),
+            "user_configuration_values",
+            ["user_id"],
+            unique=False,
         )
 
         flat_source = (

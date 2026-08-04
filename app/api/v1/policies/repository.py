@@ -18,7 +18,9 @@ async def list_by_user(session: AsyncSession, user_id: uuid.UUID) -> list[Policy
     return list(result.scalars().all())
 
 
-async def get_by_id(session: AsyncSession, policy_id: uuid.UUID, user_id: uuid.UUID) -> Policy | None:
+async def get_by_id(
+    session: AsyncSession, policy_id: uuid.UUID, user_id: uuid.UUID
+) -> Policy | None:
     result = await session.execute(
         select(Policy).where(
             Policy.id == policy_id, Policy.user_id == user_id, Policy.deleted_at.is_(None)
@@ -28,7 +30,7 @@ async def get_by_id(session: AsyncSession, policy_id: uuid.UUID, user_id: uuid.U
 
 
 async def create(session: AsyncSession, user_id: uuid.UUID, **kwargs: object) -> Policy:
-    policy = Policy(user_id=user_id, **kwargs)  # type: ignore[arg-type]
+    policy = Policy(user_id=user_id, **kwargs)
     session.add(policy)
     await session.flush()
     return policy

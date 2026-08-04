@@ -19,7 +19,9 @@ async def list_by_user(session: AsyncSession, user_id: uuid.UUID | str) -> list[
     return list(result.scalars().all())
 
 
-async def get_by_id(session: AsyncSession, bill_id: uuid.UUID | str, user_id: uuid.UUID | str) -> Bill | None:
+async def get_by_id(
+    session: AsyncSession, bill_id: uuid.UUID | str, user_id: uuid.UUID | str
+) -> Bill | None:
     result = await session.execute(
         select(Bill).where(
             Bill.id == bill_id,

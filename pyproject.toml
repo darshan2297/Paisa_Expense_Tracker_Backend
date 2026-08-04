@@ -64,7 +64,13 @@ ignore = ["E501", "UP043", "UP046", "UP047"]
 # bug B008 otherwise correctly warns about - without this, every single
 # FastAPI route parameter using Depends() would be a false positive.
 [tool.ruff.lint.flake8-bugbear]
-extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.Header", "fastapi.Body"]
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Query",
+    "fastapi.Header",
+    "fastapi.Body",
+    "fastapi.File",
+]
 
 [tool.mypy]
 python_version = "3.12"
@@ -81,8 +87,12 @@ exclude = ["alembic/"]
 # modules rather than weakening `strict` globally. (bcrypt ships its own
 # py.typed marker, so it needs no override.)
 [[tool.mypy.overrides]]
-module = ["slowapi.*", "celery.*"]
+module = ["slowapi.*", "celery.*", "pytesseract", "PIL"]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["app.worker.tasks.reminders"]
+disallow_untyped_decorators = false
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

@@ -19,38 +19,62 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    op.add_column("users", sa.Column("pin_lock_enabled", sa.Boolean(), server_default="true", nullable=False))
     op.add_column(
-        "users", sa.Column("fingerprint_login_enabled", sa.Boolean(), server_default="true", nullable=False)
-    )
-    op.add_column("users", sa.Column("face_id_enabled", sa.Boolean(), server_default="false", nullable=False))
-    op.add_column(
-        "users", sa.Column("password_protection_enabled", sa.Boolean(), server_default="true", nullable=False)
+        "users", sa.Column("pin_lock_enabled", sa.Boolean(), server_default="true", nullable=False)
     )
     op.add_column(
-        "users", sa.Column("hide_sensitive_amounts", sa.Boolean(), server_default="false", nullable=False)
+        "users",
+        sa.Column("fingerprint_login_enabled", sa.Boolean(), server_default="true", nullable=False),
     )
     op.add_column(
-        "users", sa.Column("privacy_mode_enabled", sa.Boolean(), server_default="false", nullable=False)
-    )
-    op.add_column("users", sa.Column("auto_lock_enabled", sa.Boolean(), server_default="true", nullable=False))
-    op.add_column(
-        "users", sa.Column("cloud_backup_enabled", sa.Boolean(), server_default="true", nullable=False)
+        "users", sa.Column("face_id_enabled", sa.Boolean(), server_default="false", nullable=False)
     )
     op.add_column(
-        "users", sa.Column("local_backup_enabled", sa.Boolean(), server_default="false", nullable=False)
+        "users",
+        sa.Column(
+            "password_protection_enabled", sa.Boolean(), server_default="true", nullable=False
+        ),
     )
     op.add_column(
-        "users", sa.Column("e2e_encryption_enabled", sa.Boolean(), server_default="true", nullable=False)
+        "users",
+        sa.Column("hide_sensitive_amounts", sa.Boolean(), server_default="false", nullable=False),
     )
-    op.add_column("users", sa.Column("two_factor_enabled", sa.Boolean(), server_default="true", nullable=False))
-    op.add_column("users", sa.Column("auto_logout_minutes", sa.Integer(), server_default="5", nullable=False))
-    op.add_column("users", sa.Column("vault_locked", sa.Boolean(), server_default="false", nullable=False))
+    op.add_column(
+        "users",
+        sa.Column("privacy_mode_enabled", sa.Boolean(), server_default="false", nullable=False),
+    )
+    op.add_column(
+        "users", sa.Column("auto_lock_enabled", sa.Boolean(), server_default="true", nullable=False)
+    )
+    op.add_column(
+        "users",
+        sa.Column("cloud_backup_enabled", sa.Boolean(), server_default="true", nullable=False),
+    )
+    op.add_column(
+        "users",
+        sa.Column("local_backup_enabled", sa.Boolean(), server_default="false", nullable=False),
+    )
+    op.add_column(
+        "users",
+        sa.Column("e2e_encryption_enabled", sa.Boolean(), server_default="true", nullable=False),
+    )
+    op.add_column(
+        "users",
+        sa.Column("two_factor_enabled", sa.Boolean(), server_default="true", nullable=False),
+    )
+    op.add_column(
+        "users", sa.Column("auto_logout_minutes", sa.Integer(), server_default="5", nullable=False)
+    )
+    op.add_column(
+        "users", sa.Column("vault_locked", sa.Boolean(), server_default="false", nullable=False)
+    )
     op.add_column("users", sa.Column("last_backup_at", sa.DateTime(timezone=True), nullable=True))
     op.add_column("users", sa.Column("last_backup_size_bytes", sa.Integer(), nullable=True))
 
     op.add_column("sessions", sa.Column("location", sa.String(length=255), nullable=True))
-    op.add_column("sessions", sa.Column("is_current", sa.Boolean(), server_default="false", nullable=False))
+    op.add_column(
+        "sessions", sa.Column("is_current", sa.Boolean(), server_default="false", nullable=False)
+    )
 
     op.create_table(
         "security_events",
@@ -59,12 +83,24 @@ def upgrade() -> None:
         sa.Column("device_label", sa.String(length=255), nullable=False),
         sa.Column("detail", sa.String(length=512), nullable=True),
         sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.text("now()"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], name=op.f("fk_security_events_user_id")),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_security_events")),
     )
-    op.create_index(op.f("ix_security_events_user_id"), "security_events", ["user_id"], unique=False)
+    op.create_index(
+        op.f("ix_security_events_user_id"), "security_events", ["user_id"], unique=False
+    )
 
 
 def downgrade() -> None:

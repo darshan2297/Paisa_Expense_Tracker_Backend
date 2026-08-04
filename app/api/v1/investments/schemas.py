@@ -30,7 +30,9 @@ class InvestmentResponse(BaseModel):
     def gain_pct(self) -> float:
         if self.invested_amount <= 0:
             return 0.0
-        return round(float((self.current_value - self.invested_amount) / self.invested_amount * 100), 1)
+        return round(
+            float((self.current_value - self.invested_amount) / self.invested_amount * 100), 1
+        )
 
 
 class InvestmentCreateRequest(BaseModel):

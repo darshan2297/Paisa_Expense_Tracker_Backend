@@ -1,5 +1,6 @@
 """Integration tests for /api/v1/bills/*."""
 
+import datetime as dt
 from collections.abc import AsyncGenerator
 
 import pytest
@@ -52,14 +53,16 @@ async def test_create_pay_and_unpay_bill(client: AsyncClient, auth_headers: dict
 
     pay_response = await client.post(f"/api/v1/bills/{bill_id}/pay", headers=auth_headers)
     assert pay_response.status_code == 200
-    assert pay_response.json()["data"]["paid_on"] == "2026-08-02"
+    assert pay_response.json()["data"]["paid_on"] == dt.date.today().isoformat()
 
     unpay_response = await client.post(f"/api/v1/bills/{bill_id}/unpay", headers=auth_headers)
     assert unpay_response.status_code == 200
     assert unpay_response.json()["data"]["paid_on"] is None
 
 
-async def test_toggle_auto_and_delete_bill(client: AsyncClient, auth_headers: dict[str, str]) -> None:
+async def test_toggle_auto_and_delete_bill(
+    client: AsyncClient, auth_headers: dict[str, str]
+) -> None:
     create_response = await client.post(
         "/api/v1/bills",
         headers=auth_headers,
@@ -73,12 +76,16 @@ async def test_toggle_auto_and_delete_bill(client: AsyncClient, auth_headers: di
     )
     bill_id = create_response.json()["data"]["id"]
 
-    toggle_response = await client.post(f"/api/v1/bills/{bill_id}/toggle-auto", headers=auth_headers)
+    toggle_response = await client.post(
+        f"/api/v1/bills/{bill_id}/toggle-auto", headers=auth_headers
+    )
     assert toggle_response.status_code == 200
     assert toggle_response.json()["data"]["auto_pay"] is False
 
     delete_response = await client.delete(f"/api/v1/bills/{bill_id}", headers=auth_headers)
     assert delete_response.status_code == 204
 
-    list_response = await client.get("/api/v1/bills", headers=auth_headers, params={"month": "2026-08"})
+    list_response = await client.get(
+        "/api/v1/bills", headers=auth_headers, params={"month": "2026-08"}
+    )
     assert list_response.json()["data"] == []

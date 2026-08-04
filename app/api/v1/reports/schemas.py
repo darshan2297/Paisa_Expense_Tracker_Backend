@@ -1,7 +1,5 @@
 """Report engine schemas."""
 
-from decimal import Decimal
-
 from pydantic import BaseModel
 
 

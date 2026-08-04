@@ -18,7 +18,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.categories.schemas import CategoryResponse
 from app.api.v1.fixed_commitments import repository
 from app.api.v1.fixed_commitments.models import FixedCommitment
-from app.api.v1.fixed_commitments.schemas import FixedCommitmentCreateRequest, FixedCommitmentResponse, FixedCommitmentUpdateRequest
+from app.api.v1.fixed_commitments.schemas import (
+    FixedCommitmentCreateRequest,
+    FixedCommitmentResponse,
+    FixedCommitmentUpdateRequest,
+)
 from app.core.exceptions import NotFoundError
 from app.deps import find_transaction_for_commitment, record_transaction, remove_transaction_by_id
 
@@ -33,7 +37,11 @@ def _to_response(
     category = cat_by_id.get(commitment.category_id)
     if category is None:
         category = CategoryResponse(
-            id=commitment.category_id, kind="expense", name="Unknown", color=_UNKNOWN_CATEGORY_COLOR, sort_order=0
+            id=commitment.category_id,
+            kind="expense",
+            name="Unknown",
+            color=_UNKNOWN_CATEGORY_COLOR,
+            sort_order=0,
         )
     return FixedCommitmentResponse(
         id=commitment.id,
@@ -111,7 +119,9 @@ async def update_commitment(
     return _to_response(commitment, cat_by_id, linked_id)
 
 
-async def delete_commitment(session: AsyncSession, user_id: uuid.UUID, commitment_id: uuid.UUID) -> None:
+async def delete_commitment(
+    session: AsyncSession, user_id: uuid.UUID, commitment_id: uuid.UUID
+) -> None:
     commitment = await repository.get_by_id(session, commitment_id, user_id)
     if commitment is None:
         raise NotFoundError("Fixed commitment not found")

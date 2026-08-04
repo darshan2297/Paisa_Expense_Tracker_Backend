@@ -2,7 +2,7 @@
 
 import csv
 import io
-from decimal import Decimal
+import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -30,7 +30,9 @@ REPORT_TYPES = (
 )
 
 
-async def build_report(session: AsyncSession, user_id, report_type: str, month: str) -> ReportResponse:
+async def build_report(
+    session: AsyncSession, user_id: uuid.UUID, report_type: str, month: str
+) -> ReportResponse:
     income, expense = await get_month_totals(session, user_id, month)
     budget_summary = await budget_service.get_summary(session, user_id, month)
     cats = await list_categories(session)
@@ -52,7 +54,11 @@ async def build_report(session: AsyncSession, user_id, report_type: str, month: 
             name = cat.name if cat else "Unknown"
             pct = float(amount / expense * 100) if expense else 0
             rows.append(ReportRow(cells=[name, "—", f"₹{amount}", f"{pct:.0f}%"]))
-            chart.append(ReportChartBar(label=name[:5], height=int(pct * 2), color=cat.color if cat else "#888"))
+            chart.append(
+                ReportChartBar(
+                    label=name[:5], height=int(pct * 2), color=cat.color if cat else "#888"
+                )
+            )
 
     elif report_type == "income":
         summary = [ReportKpi(label="Total income", value=f"₹{income}")]
@@ -77,8 +83,10 @@ async def build_report(session: AsyncSession, user_id, report_type: str, month: 
     elif report_type == "loan":
         loans = await loans_service.get_summary(session, user_id, month)
         summary = [ReportKpi(label="Outstanding", value=f"₹{loans.total_outstanding}")]
-        for l in loans.loans:
-            rows.append(ReportRow(cells=[l.name, l.kind, f"₹{l.outstanding}", f"₹{l.emi} EMI"]))
+        for loan in loans.loans:
+            rows.append(
+                ReportRow(cells=[loan.name, loan.kind, f"₹{loan.outstanding}", f"₹{loan.emi} EMI"])
+            )
 
     elif report_type == "networth":
         nw = await net_worth_service.get_current(session, user_id)
@@ -91,7 +99,11 @@ async def build_report(session: AsyncSession, user_id, report_type: str, month: 
         summary = [ReportKpi(label="Goals", value=str(len(goals)))]
         for g in goals:
             pct = float(g.saved_amount / g.target_amount * 100) if g.target_amount else 0
-            rows.append(ReportRow(cells=[g.name, f"{pct:.0f}%", f"₹{g.saved_amount}", f"₹{g.target_amount}"]))
+            rows.append(
+                ReportRow(
+                    cells=[g.name, f"{pct:.0f}%", f"₹{g.saved_amount}", f"₹{g.target_amount}"]
+                )
+            )
 
     else:
         summary = [

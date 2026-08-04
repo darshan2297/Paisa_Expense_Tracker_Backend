@@ -46,7 +46,12 @@ async def create(
     kind: str,
 ) -> FixedCommitment:
     commitment = FixedCommitment(
-        user_id=user_id, name=name, category_id=category_id, amount=amount, due_day=due_day, kind=kind
+        user_id=user_id,
+        name=name,
+        category_id=category_id,
+        amount=amount,
+        due_day=due_day,
+        kind=kind,
     )
     session.add(commitment)
     await session.flush()

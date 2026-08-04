@@ -18,7 +18,9 @@ async def list_by_user(session: AsyncSession, user_id: uuid.UUID) -> list[Milest
     return list(result.scalars().all())
 
 
-async def get_by_id(session: AsyncSession, milestone_id: uuid.UUID, user_id: uuid.UUID) -> Milestone | None:
+async def get_by_id(
+    session: AsyncSession, milestone_id: uuid.UUID, user_id: uuid.UUID
+) -> Milestone | None:
     result = await session.execute(
         select(Milestone).where(
             Milestone.id == milestone_id,
@@ -30,7 +32,7 @@ async def get_by_id(session: AsyncSession, milestone_id: uuid.UUID, user_id: uui
 
 
 async def create(session: AsyncSession, user_id: uuid.UUID, **kwargs: object) -> Milestone:
-    m = Milestone(user_id=user_id, **kwargs)  # type: ignore[arg-type]
+    m = Milestone(user_id=user_id, **kwargs)
     session.add(m)
     await session.flush()
     return m

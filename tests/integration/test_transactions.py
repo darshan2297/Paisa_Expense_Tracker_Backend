@@ -3,6 +3,7 @@ Postgres, all middleware) via httpx.AsyncClient.
 """
 
 from collections.abc import AsyncGenerator
+from typing import cast
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -34,7 +35,7 @@ async def auth_headers(client: AsyncClient) -> dict[str, str]:
 async def _category_id(client: AsyncClient, headers: dict[str, str], name: str) -> str:
     response = await client.get("/api/v1/categories", headers=headers)
     categories = response.json()["data"]
-    return next(c["id"] for c in categories if c["name"] == name)
+    return cast(str, next(c["id"] for c in categories if c["name"] == name))
 
 
 async def test_transactions_requires_authentication(client: AsyncClient) -> None:
@@ -112,7 +113,9 @@ async def test_list_filters_by_month(client: AsyncClient, auth_headers: dict[str
         "/api/v1/transactions", headers=auth_headers, params={"month": "2026-08"}
     )
     assert august.json()["data"]["total"] == 1
-    july = await client.get("/api/v1/transactions", headers=auth_headers, params={"month": "2026-07"})
+    july = await client.get(
+        "/api/v1/transactions", headers=auth_headers, params={"month": "2026-07"}
+    )
     assert july.json()["data"]["total"] == 1
 
 
@@ -167,7 +170,9 @@ async def test_list_search_matches_note_or_category_name(
     assert by_category.json()["data"]["total"] == 1
 
     no_match = await client.get(
-        "/api/v1/transactions", headers=auth_headers, params={"month": "2026-08", "q": "nonexistent"}
+        "/api/v1/transactions",
+        headers=auth_headers,
+        params={"month": "2026-08", "q": "nonexistent"},
     )
     assert no_match.json()["data"]["total"] == 0
 

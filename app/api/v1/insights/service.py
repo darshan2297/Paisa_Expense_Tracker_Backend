@@ -1,6 +1,7 @@
 """Insights, health score, and monthly review service."""
 
 import datetime as dt
+import uuid
 from decimal import Decimal
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -65,7 +66,7 @@ def _status_le(value: float, good: float, ok: float) -> tuple[str, int]:
     return "Needs work", 25
 
 
-async def get_health(session: AsyncSession, user_id, month: str) -> HealthResponse:
+async def get_health(session: AsyncSession, user_id: uuid.UUID, month: str) -> HealthResponse:
     """Eight health cards — labels/copy/thresholds match design HTML `healthCards`."""
     income, expense = await get_month_totals(session, user_id, month)
     budget_summary = await budget_service.get_summary(session, user_id, month)
@@ -77,7 +78,9 @@ async def get_health(session: AsyncSession, user_id, month: str) -> HealthRespon
 
     savings_rate = float((income - expense) / income * 100) if income else 0.0
     inv_rate = float(inv_summary.monthly_sip_total / income * 100) if income else 0.0
-    budget_util = float(100 - budget_summary.pct_remaining) if budget_summary.monthly_amount else 0.0
+    budget_util = (
+        float(100 - budget_summary.pct_remaining) if budget_summary.monthly_amount else 0.0
+    )
     ef_months = float(emergency.months_of_expenses_covered)
     debt_ratio = float(loans_summary.debt_to_income_pct)
     cashflow = income - expense
@@ -205,7 +208,7 @@ async def get_health(session: AsyncSession, user_id, month: str) -> HealthRespon
     return HealthResponse(composite_score=composite, metrics=metrics)
 
 
-async def get_trends(session: AsyncSession, user_id, months: int) -> TrendsResponse:
+async def get_trends(session: AsyncSession, user_id: uuid.UUID, months: int) -> TrendsResponse:
     today = dt.date.today()
     month = f"{today.year:04d}-{today.month:02d}"
     trend_months: list[TrendMonth] = []
@@ -230,7 +233,7 @@ async def get_trends(session: AsyncSession, user_id, months: int) -> TrendsRespo
     return TrendsResponse(months=trend_months, insights=insights)
 
 
-async def get_review(session: AsyncSession, user_id, month: str) -> ReviewResponse:
+async def get_review(session: AsyncSession, user_id: uuid.UUID, month: str) -> ReviewResponse:
     income, expense = await get_month_totals(session, user_id, month)
     prev_income, prev_expense = await get_month_totals(session, user_id, _month_offset(month, -1))
     budget_summary = await budget_service.get_summary(session, user_id, month)
@@ -253,7 +256,9 @@ async def get_review(session: AsyncSession, user_id, month: str) -> ReviewRespon
 
     rows = [
         ReviewRow(label="Income", value=f"₹{income}", delta=f"{income_delta:+.0f}% vs last month"),
-        ReviewRow(label="Expenses", value=f"₹{expense}", delta=f"{expense_delta:+.0f}% vs last month"),
+        ReviewRow(
+            label="Expenses", value=f"₹{expense}", delta=f"{expense_delta:+.0f}% vs last month"
+        ),
         ReviewRow(label="Saved", value=f"+₹{income - expense}", delta=""),
         ReviewRow(
             label="Net worth change",
