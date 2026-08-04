@@ -30,3 +30,28 @@ async def test_health_check_returns_ok_envelope() -> None:
 
     # RequestIdMiddleware should have stamped a correlation id header.
     assert "x-request-id" in response.headers
+
+
+async def test_health_live_returns_ok() -> None:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/api/v1/health/live")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["success"] is True
+    assert body["data"]["status"] == "ok"
+
+
+async def test_health_ready_returns_checks() -> None:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/api/v1/health/ready")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["success"] is True
+    checks = body["data"]["checks"]
+    assert "database" in checks
+    assert "redis" in checks
+    assert checks["database"] is True

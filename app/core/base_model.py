@@ -19,13 +19,30 @@ domain models exist yet in Phase-0):
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, func
+from sqlalchemy import DateTime, MetaData, func
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+# Without an explicit naming convention, SQLAlchemy leaves constraint/index
+# names to the database's own defaults, which don't match this project's
+# documented convention (docs/DATABASE_STANDARDS.md: fk_{table}_{column},
+# uq_{table}_{column}, ix_{table}_{column}). Setting it once here, on the
+# shared metadata, means every future model gets consistent, predictable
+# names for free - important for reading migration diffs and for Alembic's
+# autogenerate to produce stable, non-churning DDL across runs.
+_NAMING_CONVENTION = {
+    "ix": "ix_%(table_name)s_%(column_0_name)s",
+    "uq": "uq_%(table_name)s_%(column_0_name)s",
+    "ck": "ck_%(table_name)s_%(constraint_name)s",
+    "fk": "fk_%(table_name)s_%(column_0_name)s",
+    "pk": "pk_%(table_name)s",
+}
 
 
 class Base(DeclarativeBase):
     """Shared declarative base for all ORM models."""
+
+    metadata = MetaData(naming_convention=_NAMING_CONVENTION)
 
 
 class UUIDPKMixin:

@@ -10,14 +10,18 @@ Two complementary layers:
    closest to the route.
 
 2. `ErrorHandlingMiddleware` is a last-resort safety net added as the
-   innermost custom middleware (via `add_middleware`, added first so it
-   ends up just outside the exception-handler layer). It catches anything
-   that still escapes as a raised exception (bugs in other middleware,
-   truly unexpected errors) and turns it into a logged 500 response instead
-   of letting Starlette's default `ServerErrorMiddleware` return a bare
-   unstructured error.
+   innermost custom middleware. It catches anything that still escapes as a
+   raised exception (bugs in other middleware, truly unexpected errors) and
+   turns it into a logged 500 response instead of letting Starlette's
+   default `ServerErrorMiddleware` return a bare unstructured error.
 
 Both paths build the same envelope shape via `app.core.response.error_envelope`.
+
+`ErrorHandlingMiddleware` is a pure ASGI middleware, not a
+`BaseHTTPMiddleware` subclass - see `app.middleware.request_id`'s module
+docstring for why: BaseHTTPMiddleware runs the downstream app in a separate
+anyio task, which breaks asyncpg/SQLAlchemy-async connections used by any
+route this middleware wraps.
 """
 
 import logging
@@ -26,8 +30,8 @@ from collections.abc import Awaitable, Callable
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import JSONResponse, Response
+from starlette.responses import JSONResponse
+from starlette.types import Receive, Scope, Send
 
 from app.core.exceptions import AppError
 from app.core.response import error_envelope
@@ -98,23 +102,34 @@ def register_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(Exception, unhandled_exception_handler)
 
 
-class ErrorHandlingMiddleware(BaseHTTPMiddleware):
+class ErrorHandlingMiddleware:
     """Last-resort safety net; see module docstring."""
 
-    async def dispatch(
-        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
-    ) -> Response:
+    def __init__(self, app: Callable[[Scope, Receive, Send], Awaitable[None]]) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        request_id = "-"
+        state = scope.get("state")
+        if isinstance(state, dict):
+            request_id = state.get("request_id", "-")
+
         try:
-            return await call_next(request)
+            await self.app(scope, receive, send)
         except Exception:
             logger.exception(
                 "Unhandled exception escaped routing/exception handlers",
-                extra={"request_id": _request_id(request)},
+                extra={"request_id": request_id},
             )
-            return JSONResponse(
+            response = JSONResponse(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 content=error_envelope(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     message="Internal server error",
                 ),
             )
+            await response(scope, receive, send)

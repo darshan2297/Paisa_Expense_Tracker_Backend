@@ -63,9 +63,27 @@ class Settings(BaseSettings):
         default_factory=lambda: ["http://localhost:3000"]
     )
 
+    # --- Redis / cache ---
+    REDIS_URL: str = "redis://localhost:6379/0"
+    CACHE_DEFAULT_TTL_SECONDS: int = 300
+
+    # --- Celery ---
+    CELERY_BROKER_URL: str = "redis://localhost:6379/1"
+    CELERY_RESULT_BACKEND: str = "redis://localhost:6379/2"
+
     # --- Rate limiting ---
     # slowapi limit-string syntax, e.g. "100/minute"
     RATE_LIMIT_DEFAULT: str = "100/minute"
+
+    # --- Local file storage (receipt slips, backups later) ---
+    # Relative to the backend working directory, or an absolute path.
+    STORAGE_DIR: str = "storage"
+
+    # --- Seed (scripts/seed.py only - there is no public registration
+    # endpoint; the single user is created by this script) ---
+    SEED_USER_EMAIL: str | None = None
+    SEED_USER_PASSWORD: str | None = None
+    SEED_USER_NAME: str | None = None
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
