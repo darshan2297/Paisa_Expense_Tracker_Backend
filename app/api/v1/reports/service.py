@@ -54,9 +54,12 @@ async def build_report(
             name = cat.name if cat else "Unknown"
             pct = float(amount / expense * 100) if expense else 0
             rows.append(ReportRow(cells=[name, "—", f"₹{amount}", f"{pct:.0f}%"]))
+            # Bar height is pixels for the frontend chart track (max 140).
             chart.append(
                 ReportChartBar(
-                    label=name[:5], height=int(pct * 2), color=cat.color if cat else "#888"
+                    label=name[:5],
+                    height=max(8, int(pct / 100 * 140)),
+                    color=cat.color if cat else "#888",
                 )
             )
 
