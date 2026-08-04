@@ -19,7 +19,6 @@ from app.api.v1.calendar.schemas import (
 )
 from app.api.v1.fixed_commitments import repository as fc_repo
 from app.api.v1.goals import repository as goals_repo
-from app.api.v1.loans import repository as loans_repo
 from app.api.v1.policies import repository as policies_repo
 from app.api.v1.transactions.models import Transaction, TransactionType
 from app.api.v1.transactions.repository import month_bounds
@@ -51,7 +50,9 @@ async def get_calendar(session: AsyncSession, user_id: uuid.UUID, month: str) ->
     goals = await goals_repo.list_by_user(session, user_id)
     bills = await bills_repo.list_by_user(session, user_id)
     policies = await policies_repo.list_by_user(session, user_id)
-    loans = await loans_repo.list_by_user(session, user_id)
+    # Loans are balance/amortization records only — monthly EMI cash-flow
+    # belongs on fixed commitments (Planned). Do not inject loan EMIs here
+    # or they duplicate commitments the user already scheduled.
     commitments = await fc_repo.list_by_user(session, user_id)
 
     days: list[DayCell] = []
@@ -90,13 +91,6 @@ async def get_calendar(session: AsyncSession, user_id: uuid.UUID, month: str) ->
                     PlannedItem(label=policy.name, kind="Insurance", amount=policy.premium)
                 )
                 planned_total += policy.premium
-        for loan in loans:
-            if loan.start_date.day == day_num:
-                from app.api.v1.loans.schemas import compute_emi
-
-                emi = compute_emi(loan.principal, loan.rate_pct, loan.tenure_months)
-                planned.append(PlannedItem(label=loan.name, kind="EMI", amount=emi))
-                planned_total += emi
         for fc in commitments:
             if fc.due_day == day_num:
                 planned.append(PlannedItem(label=fc.name, kind="Fixed", amount=fc.amount))
