@@ -26,6 +26,7 @@ class CreditCardUpdateRequest(BaseModel):
     network: str | None = Field(default=None, max_length=64)
     last4: str | None = Field(default=None, min_length=4, max_length=4, pattern=r"^\d{4}$")
     credit_limit: Decimal | None = Field(default=None, gt=0)
+    outstanding: Decimal | None = Field(default=None, ge=0)
     emi_amount: Decimal | None = Field(default=None, ge=0)
     statement_day: int | None = Field(default=None, ge=1, le=28)
     due_day: int | None = Field(default=None, ge=1, le=28)
