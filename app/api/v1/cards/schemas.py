@@ -14,6 +14,7 @@ class CreditCardCreateRequest(BaseModel):
     last4: str = Field(min_length=4, max_length=4, pattern=r"^\d{4}$")
     credit_limit: Decimal = Field(gt=0)
     outstanding: Decimal = Field(default=Decimal("0"), ge=0)
+    emi_amount: Decimal = Field(default=Decimal("0"), ge=0)
     statement_day: int = Field(ge=1, le=28)
     due_day: int = Field(ge=1, le=28)
     opened_on: dt.date | None = None
@@ -25,6 +26,7 @@ class CreditCardUpdateRequest(BaseModel):
     network: str | None = Field(default=None, max_length=64)
     last4: str | None = Field(default=None, min_length=4, max_length=4, pattern=r"^\d{4}$")
     credit_limit: Decimal | None = Field(default=None, gt=0)
+    emi_amount: Decimal | None = Field(default=None, ge=0)
     statement_day: int | None = Field(default=None, ge=1, le=28)
     due_day: int | None = Field(default=None, ge=1, le=28)
     opened_on: dt.date | None = None
@@ -40,6 +42,7 @@ class CreditCardResponse(BaseModel):
     last4: str
     credit_limit: Decimal
     outstanding: Decimal
+    emi_amount: Decimal
     statement_day: int
     due_day: int
     opened_on: dt.date | None

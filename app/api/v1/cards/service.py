@@ -151,6 +151,12 @@ async def record_spend(
     card_id: uuid.UUID,
     payload: CardAmountRequest,
 ) -> CreditCardResponse:
+    """Charge the card (unpaid).
+
+    Raises outstanding / utilisation. The linked expense is tagged as card
+    spend so cash totals ignore it until a real payment is recorded — money
+    has not left the bank yet.
+    """
     card = await repository.get_by_id(session, card_id, user_id)
     if card is None:
         raise NotFoundError("Credit card not found")

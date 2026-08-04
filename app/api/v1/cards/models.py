@@ -23,6 +23,8 @@ class CreditCard(Base, UUIDPKMixin, TimestampMixin, SoftDeleteMixin):
     last4: Mapped[str] = mapped_column(String(4), nullable=False)
     credit_limit: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
     outstanding: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False, server_default="0")
+    # Optional monthly EMI installment — used by "Pay EMI" (reduces outstanding only).
+    emi_amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False, server_default="0")
     statement_day: Mapped[int] = mapped_column(Integer, nullable=False)
     due_day: Mapped[int] = mapped_column(Integer, nullable=False)
     opened_on: Mapped[dt.date | None] = mapped_column(Date, nullable=True)

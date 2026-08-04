@@ -100,6 +100,22 @@ async def list_recent(
     return list((await session.execute(stmt)).scalars().all())
 
 
+def _cash_relevant_filter():
+    """Cash has left the bank for: non-card expenses, or card *payments*.
+
+    Card *spends* raise outstanding (liability) but must not also reduce cash
+    — otherwise net worth is hit twice. Payments (`note` contains 'payment')
+    are the moment cash actually leaves.
+    """
+    from sqlalchemy import or_
+
+    return or_(
+        Transaction.type != TransactionType.EXPENSE.value,
+        Transaction.card_id.is_(None),
+        Transaction.note.ilike("%payment%"),
+    )
+
+
 async def sum_by_type(
     session: AsyncSession, user_id: uuid.UUID | str, month: str
 ) -> dict[str, Decimal]:
@@ -111,6 +127,7 @@ async def sum_by_type(
             Transaction.deleted_at.is_(None),
             Transaction.date >= start,
             Transaction.date <= end,
+            _cash_relevant_filter(),
         )
         .group_by(Transaction.type)
     )
@@ -131,6 +148,7 @@ async def sum_by_type_all_time(
         .where(
             Transaction.user_id == user_id,
             Transaction.deleted_at.is_(None),
+            _cash_relevant_filter(),
         )
         .group_by(Transaction.type)
     )
@@ -150,11 +168,10 @@ async def sum_expense_by_category(
         Transaction.date <= end,
     ]
     if card_only:
-        # "Category spending on cards" must reflect only spend actually made
-        # on a credit card, not the whole month's expense breakdown - a
-        # transaction is card spend iff it carries a card_id (set by
-        # `spend_on_card`, see cards/service.py).
+        # Card *spend* only — exclude repayments so "Category spending on
+        # cards" is not inflated by Pay full / Pay minimum / Pay EMI.
         conditions.append(Transaction.card_id.isnot(None))
+        conditions.append(~Transaction.note.ilike("%payment%"))
     stmt = (
         select(Transaction.category_id, func.sum(Transaction.amount))
         .where(*conditions)
