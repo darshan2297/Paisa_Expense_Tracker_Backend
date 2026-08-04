@@ -6,7 +6,7 @@ authors = ["Darshan <darshan.vankawala@viitor.cloud>"]
 package-mode = false
 
 [tool.poetry.dependencies]
-python = "^3.13"
+python = "^3.12"
 fastapi = "^0.115.0"
 uvicorn = { extras = ["standard"], version = "^0.32.0" }
 sqlalchemy = { extras = ["asyncio"], version = "^2.0.36" }
@@ -15,8 +15,10 @@ alembic = "^1.14.0"
 pydantic = "^2.9.2"
 pydantic-settings = "^2.6.1"
 pyjwt = "^2.9.0"
-passlib = { extras = ["bcrypt"], version = "^1.7.4" }
-apscheduler = "^3.10.4"
+bcrypt = ">=4.0,<6.0"
+redis = "^5.2.0"
+celery = { extras = ["redis"], version = "^5.4.0" }
+jinja2 = "^3.1.4"
 slowapi = "^0.1.9"
 python-multipart = "^0.0.12"
 email-validator = "^2.2.0"
@@ -37,7 +39,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.black]
 line-length = 100
-target-version = ["py313"]
+target-version = ["py312"]
 
 [tool.isort]
 profile = "black"
@@ -45,7 +47,7 @@ line_length = 100
 
 [tool.ruff]
 line-length = 100
-target-version = "py313"
+target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "W", "UP", "B"]
@@ -57,8 +59,15 @@ select = ["E", "F", "I", "W", "UP", "B"]
 # development, even though the target runtime is 3.13.
 ignore = ["E501", "UP043", "UP046", "UP047"]
 
+# `Depends(...)`/`Query(...)` as a default argument is FastAPI's own
+# documented dependency-injection pattern, not the mutable-default-argument
+# bug B008 otherwise correctly warns about - without this, every single
+# FastAPI route parameter using Depends() would be a false positive.
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.Header", "fastapi.Body"]
+
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.12"
 plugins = ["pydantic.mypy"]
 strict = true
 warn_return_any = true
@@ -67,13 +76,21 @@ disallow_untyped_defs = true
 exclude = ["alembic/"]
 
 # Third-party packages below ship no inline type hints and no stubs on PyPI
-# (types-apscheduler/types-passlib etc. are either unmaintained or don't
-# exist for the versions pinned here) - silence the import-untyped noise for
-# just these modules rather than weakening `strict` globally.
+# (types-apscheduler etc. is either unmaintained or doesn't exist for the
+# version pinned here) - silence the import-untyped noise for just these
+# modules rather than weakening `strict` globally. (bcrypt ships its own
+# py.typed marker, so it needs no override.)
 [[tool.mypy.overrides]]
-module = ["apscheduler.*", "passlib.*", "slowapi.*"]
+module = ["slowapi.*", "celery.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+# NOTE: deliberately NOT setting asyncio_default_fixture_loop_scope="session"
+# here. The real fix for async-engine-across-tests breakage is disposing the
+# cached engine after every test (see tests/conftest.py's `_clean_database`
+# docstring) - an asyncpg connection can't safely survive a *different*
+# `run_until_complete()` cycle regardless of event loop scope, so pinning a
+# shared loop doesn't actually solve it and isn't needed once the engine
+# itself is disposed+recreated per test.

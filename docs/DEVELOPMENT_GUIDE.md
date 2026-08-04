@@ -4,7 +4,7 @@
 
 ```bash
 poetry install                        # once, or after pyproject.toml changes
-poetry run uvicorn app.main:app --reload
+poetry run uvicorn app.main:app --reload --port 8001
 poetry run pytest                     # before every commit
 poetry run pre-commit run --all-files # if you didn't install the git hook
 ```

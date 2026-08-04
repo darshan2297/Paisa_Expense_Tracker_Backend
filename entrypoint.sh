@@ -8,6 +8,9 @@ set -euo pipefail
 echo "[entrypoint] Running database migrations..."
 alembic upgrade head
 
+echo "[entrypoint] Seeding reference data (configuration catalog)..."
+python -m scripts.seed_reference_data
+
 echo "[entrypoint] Starting API server..."
 # Render (and most PaaS hosts) inject PORT and expect the process to bind to it;
 # default to 8000 for local/docker-compose use where nothing sets PORT.
