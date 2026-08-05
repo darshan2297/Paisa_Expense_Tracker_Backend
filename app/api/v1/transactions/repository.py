@@ -246,6 +246,21 @@ async def get_by_bill_and_due_date(
     return result.scalar_one_or_none()
 
 
+async def get_by_ledger_entry_id(
+    session: AsyncSession, ledger_entry_id: uuid.UUID | str
+) -> Transaction | None:
+    result = await session.execute(
+        select(Transaction)
+        .where(
+            Transaction.ledger_entry_id == ledger_entry_id,
+            Transaction.deleted_at.is_(None),
+        )
+        .order_by(Transaction.created_at.desc())
+        .limit(1)
+    )
+    return result.scalar_one_or_none()
+
+
 async def get_latest_by_policy_id(
     session: AsyncSession, policy_id: uuid.UUID | str
 ) -> Transaction | None:

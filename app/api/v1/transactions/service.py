@@ -308,6 +308,7 @@ async def record_transaction(
     bill_id: uuid.UUID | None = None,
     card_id: uuid.UUID | None = None,
     policy_id: uuid.UUID | None = None,
+    ledger_entry_id: uuid.UUID | None = None,
 ) -> uuid.UUID:
     """Create a transaction row and return just its id.
 
@@ -330,6 +331,7 @@ async def record_transaction(
         bill_id=bill_id,
         card_id=card_id,
         policy_id=policy_id,
+        ledger_entry_id=ledger_entry_id,
     )
     return transaction.id
 
@@ -357,6 +359,13 @@ async def find_transaction_for_policy(
     session: AsyncSession, policy_id: uuid.UUID
 ) -> uuid.UUID | None:
     transaction = await repository.get_latest_by_policy_id(session, policy_id)
+    return transaction.id if transaction else None
+
+
+async def find_transaction_for_ledger_entry(
+    session: AsyncSession, ledger_entry_id: uuid.UUID
+) -> uuid.UUID | None:
+    transaction = await repository.get_by_ledger_entry_id(session, ledger_entry_id)
     return transaction.id if transaction else None
 
 

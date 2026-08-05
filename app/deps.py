@@ -16,6 +16,7 @@ from app.api.v1.categories.service import get_category, list_categories
 from app.api.v1.transactions.service import (
     find_transaction_for_bill,
     find_transaction_for_commitment,
+    find_transaction_for_ledger_entry,
     find_transaction_for_policy,
     get_month_totals,
     record_transaction,
@@ -44,6 +45,7 @@ __all__ = [
     "find_transaction_for_commitment",
     "find_transaction_for_bill",
     "find_transaction_for_policy",
+    "find_transaction_for_ledger_entry",
     "record_transaction",
     "remove_transaction_by_id",
 ]

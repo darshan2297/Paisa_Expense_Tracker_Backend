@@ -67,3 +67,6 @@ class Transaction(Base, UUIDPKMixin, TimestampMixin, SoftDeleteMixin):
     policy_id: Mapped[uuid.UUID | None] = mapped_column(
         PG_UUID(as_uuid=True), ForeignKey("policies.id"), nullable=True
     )
+    ledger_entry_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("ledger_entries.id"), nullable=True
+    )
