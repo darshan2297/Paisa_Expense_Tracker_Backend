@@ -48,6 +48,8 @@ class Transaction(Base, UUIDPKMixin, TimestampMixin, SoftDeleteMixin):
     currency: Mapped[str] = mapped_column(String(3), nullable=False, server_default="INR")
     date: Mapped[dt.date] = mapped_column(Date, nullable=False)
     note: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # How cash moved: cash / upi / card / netbanking / cheque / other.
+    payment_method: Mapped[str | None] = mapped_column(String(32), nullable=True)
     # Relative path under STORAGE_DIR, e.g. receipts/{user_id}/{txn_id}.jpg
     receipt_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
 

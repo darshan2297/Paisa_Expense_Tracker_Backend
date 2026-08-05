@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field
 from app.api.v1.categories.schemas import CategoryResponse
 
 TransactionKind = Literal["expense", "income"]
+PaymentMethod = Literal["cash", "upi", "card", "netbanking", "cheque", "other"]
 
 
 class TransactionCreateRequest(BaseModel):
@@ -24,6 +25,7 @@ class TransactionCreateRequest(BaseModel):
     amount: Decimal = Field(gt=0)
     date: dt.date
     note: str | None = Field(default=None, max_length=500)
+    payment_method: PaymentMethod | None = None
 
 
 class TransactionUpdateRequest(BaseModel):
@@ -31,6 +33,7 @@ class TransactionUpdateRequest(BaseModel):
     amount: Decimal | None = Field(default=None, gt=0)
     date: dt.date | None = None
     note: str | None = Field(default=None, max_length=500)
+    payment_method: PaymentMethod | None = None
 
 
 class TransactionResponse(BaseModel):
@@ -43,6 +46,7 @@ class TransactionResponse(BaseModel):
     currency: str
     date: dt.date
     note: str | None
+    payment_method: str | None = None
     category: CategoryResponse
     created_at: dt.datetime
     has_receipt: bool = False

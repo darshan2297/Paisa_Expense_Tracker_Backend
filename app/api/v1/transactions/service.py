@@ -67,6 +67,7 @@ def _to_response(
         currency=transaction.currency,
         date=transaction.date,
         note=transaction.note,
+        payment_method=transaction.payment_method,
         category=category,
         created_at=transaction.created_at,
         has_receipt=has_receipt,
@@ -164,6 +165,7 @@ async def create_transaction(
         amount=payload.amount,
         date=payload.date,
         note=payload.note,
+        payment_method=payload.payment_method,
     )
     return _to_response(transaction, cat_by_id)
 
@@ -261,6 +263,8 @@ async def update_transaction(
         transaction.date = payload.date
     if payload.note is not None:
         transaction.note = payload.note
+    if "payment_method" in payload.model_fields_set:
+        transaction.payment_method = payload.payment_method
     await session.flush()
     return _to_response(transaction, cat_by_id)
 
@@ -309,6 +313,7 @@ async def record_transaction(
     card_id: uuid.UUID | None = None,
     policy_id: uuid.UUID | None = None,
     ledger_entry_id: uuid.UUID | None = None,
+    payment_method: str | None = None,
 ) -> uuid.UUID:
     """Create a transaction row and return just its id.
 
@@ -332,6 +337,7 @@ async def record_transaction(
         card_id=card_id,
         policy_id=policy_id,
         ledger_entry_id=ledger_entry_id,
+        payment_method=payment_method,
     )
     return transaction.id
 
