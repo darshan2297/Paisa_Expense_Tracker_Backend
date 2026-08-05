@@ -3,6 +3,7 @@
 import calendar
 import datetime as dt
 from decimal import Decimal
+from zoneinfo import ZoneInfo
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -50,7 +51,7 @@ async def get_life_dashboard(
 
     year, mon = (int(part) for part in month.split("-"))
     days_in_month = calendar.monthrange(year, mon)[1]
-    today = dt.date.today()
+    today = dt.datetime.now(ZoneInfo("Asia/Kolkata")).date()
     if (today.year, today.month) == (year, mon):
         days_elapsed = max(1, today.day)
         days_remaining = days_in_month - today.day + 1

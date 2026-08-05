@@ -15,6 +15,7 @@ import calendar
 import datetime as dt
 import uuid
 from decimal import Decimal
+from zoneinfo import ZoneInfo
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -29,6 +30,11 @@ from app.deps import get_month_totals
 _DEFAULT_MONTHLY_AMOUNT = Decimal(0)
 _DEFAULT_ALERT_PCT = 20
 _DEFAULT_REMINDER_LEAD_DAYS = 15
+_APP_TZ = ZoneInfo("Asia/Kolkata")
+
+
+def _today() -> dt.date:
+    return dt.datetime.now(_APP_TZ).date()
 
 
 async def get_settings(session: AsyncSession, user_id: uuid.UUID) -> BudgetSettingResponse:
@@ -58,7 +64,7 @@ async def update_settings(
 def _days_remaining_in_month(month: str) -> int:
     year, mon = (int(part) for part in month.split("-"))
     days_in_month = calendar.monthrange(year, mon)[1]
-    today = dt.date.today()
+    today = _today()
     if (today.year, today.month) == (year, mon):
         return max(1, days_in_month - today.day + 1)
     if dt.date(year, mon, 1) > today:
