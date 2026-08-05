@@ -24,6 +24,12 @@ async def _run_fixed_reminders() -> int:
     return await run_fixed_commitment_reminders()
 
 
+async def _run_policy_reminders() -> int:
+    from app.worker.tasks._reminder_runner import run_policy_reminders
+
+    return await run_policy_reminders()
+
+
 @celery_app.task(name="app.worker.tasks.reminders.process_bill_reminders")
 def process_bill_reminders() -> int:
     count = asyncio.run(_run_bill_reminders())
@@ -35,6 +41,13 @@ def process_bill_reminders() -> int:
 def process_fixed_commitment_reminders() -> int:
     count = asyncio.run(_run_fixed_reminders())
     logger.info("fixed commitment reminders processed", extra={"count": count})
+    return count
+
+
+@celery_app.task(name="app.worker.tasks.reminders.process_policy_reminders")
+def process_policy_reminders() -> int:
+    count = asyncio.run(_run_policy_reminders())
+    logger.info("policy reminders processed", extra={"count": count})
     return count
 
 

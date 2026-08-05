@@ -36,11 +36,12 @@ Switching to production requires **only env changes** — no code changes.
 | `RATE_LIMIT_DEFAULT` | `100/minute` | `100/minute` |
 | `PORT` | *(local dev: pass `--port 8001` to uvicorn)* | Render injects this |
 
-Optional (added when their feature ships):
+Optional:
 
 | Variable | Feature |
 |---|---|
-| `RESEND_API_KEY`, `EMAIL_FROM` | F17 notifications |
+| `RESEND_API_KEY`, `EMAIL_FROM` | F17 email reminders (Resend). Option B: `EMAIL_FROM=Paisa <onboarding@resend.dev>` (only delivers to your Resend account email; Paisa `User.email` must match). Verified domain: `Paisa <reminders@yourdomain.com>`. |
+| `CRON_SECRET` | Protects `POST /api/v1/internal/reminders/run` (GitHub Actions daily-reminders workflow). Also set as repo secret `CRON_SECRET` with `API_BASE_URL`. |
 | `STORAGE_BACKEND`, `R2_*` | F19/F20 file storage |
 
 ## Local dev processes

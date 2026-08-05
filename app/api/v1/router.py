@@ -17,6 +17,7 @@ from app.api.v1.groups.router import groups_router
 from app.api.v1.health.router import router as health_router
 from app.api.v1.import_jobs.router import import_router
 from app.api.v1.insights.router import insights_router
+from app.api.v1.internal.router import internal_router
 from app.api.v1.investments.router import investments_router
 from app.api.v1.ledger.router import ledger_router
 from app.api.v1.loans.router import loans_router
@@ -58,3 +59,4 @@ api_v1_router.include_router(notifications_router, tags=["notifications"])
 api_v1_router.include_router(import_router, tags=["import"])
 api_v1_router.include_router(scanner_router, tags=["scanner"])
 api_v1_router.include_router(security_router, tags=["security"])
+api_v1_router.include_router(internal_router, tags=["internal"])

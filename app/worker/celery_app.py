@@ -34,6 +34,10 @@ celery_app.conf.update(
             "task": "app.worker.tasks.reminders.process_fixed_commitment_reminders",
             "schedule": crontab(hour=8, minute=5),
         },
+        "policy-reminders-daily": {
+            "task": "app.worker.tasks.reminders.process_policy_reminders",
+            "schedule": crontab(hour=8, minute=10),
+        },
         "bill-rollover-daily": {
             "task": "app.worker.tasks.reminders.process_bill_rollover",
             "schedule": crontab(hour=0, minute=30),

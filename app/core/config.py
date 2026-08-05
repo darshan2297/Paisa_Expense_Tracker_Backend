@@ -79,6 +79,16 @@ class Settings(BaseSettings):
     # Relative to the backend working directory, or an absolute path.
     STORAGE_DIR: str = "storage"
 
+    # --- Email (Resend — F17 reminders) ---
+    # Option B (no domain): EMAIL_FROM=Paisa <onboarding@resend.dev>
+    # (delivers only to the email on your Resend account).
+    # With a verified domain: EMAIL_FROM=Paisa <reminders@yourdomain.com>
+    RESEND_API_KEY: str | None = None
+    EMAIL_FROM: str | None = None
+
+    # Shared secret for POST /api/v1/internal/reminders/run (GitHub Actions cron).
+    CRON_SECRET: str | None = None
+
     # --- Seed (scripts/seed.py only - there is no public registration
     # endpoint; the single user is created by this script) ---
     SEED_USER_EMAIL: str | None = None

@@ -1,0 +1,29 @@
+name: Daily reminders
+
+# 08:00 Asia/Kolkata = 02:30 UTC. Calls the secured API endpoint so reminders
+# run without a separate Celery worker on Render free tier.
+on:
+  schedule:
+    - cron: "30 2 * * *"
+  workflow_dispatch:
+
+jobs:
+  run-reminders:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger reminder job
+        env:
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$API_BASE_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "::error::Set repository secrets API_BASE_URL and CRON_SECRET."
+            exit 1
+          fi
+          # Trim trailing slash from base URL
+          BASE="${API_BASE_URL%/}"
+          curl --fail --show-error --silent \
+            -X POST \
+            -H "X-Cron-Secret: ${CRON_SECRET}" \
+            -H "Content-Type: application/json" \
+            "${BASE}/api/v1/internal/reminders/run"
