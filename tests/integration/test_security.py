@@ -101,6 +101,44 @@ async def test_repeated_login_reuses_same_device_session(
     assert chrome[0]["is_current"] is True
 
 
+async def test_remote_sign_out_invalidates_other_device_tokens(
+    client: AsyncClient, auth_headers: dict[str, str]
+) -> None:
+    """Security → Sign out must kill that device's access + refresh tokens."""
+    other_ua = "okhttp/4.9.2"
+    other_login = await client.post(
+        "/api/v1/auth/login",
+        json={"email": TEST_EMAIL, "password": TEST_PASSWORD},
+        headers={"User-Agent": other_ua},
+    )
+    assert other_login.status_code == 200
+    other_access = other_login.json()["data"]["access_token"]
+    other_refresh = other_login.json()["data"]["refresh_token"]
+
+    overview = await client.get("/api/v1/security", headers=auth_headers)
+    assert overview.status_code == 200
+    sessions = overview.json()["data"]["sessions"]
+    other = next(s for s in sessions if s.get("user_agent") == other_ua)
+
+    revoke = await client.delete(
+        f"/api/v1/security/sessions/{other['id']}", headers=auth_headers
+    )
+    assert revoke.status_code == 204
+
+    blocked = await client.get(
+        "/api/v1/profile",
+        headers={"Authorization": f"Bearer {other_access}", "User-Agent": other_ua},
+    )
+    assert blocked.status_code == 401
+
+    refreshed = await client.post(
+        "/api/v1/auth/refresh",
+        json={"refresh_token": other_refresh},
+        headers={"User-Agent": other_ua},
+    )
+    assert refreshed.status_code == 401
+
+
 async def test_logout_clears_trusted_device_sessions(
     client: AsyncClient, auth_headers: dict[str, str]
 ) -> None:

@@ -61,7 +61,12 @@ async def register(
     payload: RegisterRequest,
     session: AsyncSession = Depends(get_session),
 ) -> TokenPairResponse:
-    return await service.register(session, payload.email, payload.password, payload.name)
+    from app.api.v1.security import service as security_service
+
+    user = await service.register(session, payload.email, payload.password, payload.name)
+    session_id = await security_service.record_login(session, user, request)
+    await session.commit()
+    return await service.issue_tokens_for_session(user, session_id)
 
 
 @auth_router.post("/login", summary="Log in with email + password")
@@ -71,14 +76,12 @@ async def login(
     payload: LoginRequest,
     session: AsyncSession = Depends(get_session),
 ) -> TokenPairResponse:
-    tokens = await service.login(session, payload.email, payload.password)
-    user = await repository.get_by_email(session, payload.email)
-    if user is not None:
-        from app.api.v1.security import service as security_service
+    from app.api.v1.security import service as security_service
 
-        await security_service.record_login(session, user, request)
-        await session.commit()
-    return tokens
+    user = await service.login(session, payload.email, payload.password)
+    session_id = await security_service.record_login(session, user, request)
+    await session.commit()
+    return await service.issue_tokens_for_session(user, session_id)
 
 
 @auth_router.post("/refresh", summary="Exchange a refresh token for a new pair")
@@ -88,6 +91,8 @@ async def refresh(
     payload: RefreshRequest,
     session: AsyncSession = Depends(get_session),
 ) -> TokenPairResponse:
+    # Do not mint a new device session here. Legacy no-`sid` refresh tokens
+    # must sign in again — otherwise remote "Sign out" cannot stop them.
     return await service.refresh_tokens(session, payload.refresh_token)
 
 

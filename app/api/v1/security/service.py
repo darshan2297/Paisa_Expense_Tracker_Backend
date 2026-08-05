@@ -30,7 +30,7 @@ from app.api.v1.security.schemas import (
     SecuritySettingsUpdateRequest,
     SessionResponse,
 )
-from app.core.exceptions import NotFoundError, ValidationError
+from app.core.exceptions import NotFoundError, UnauthorizedError, ValidationError
 from app.core.pagination import PageParams
 
 
@@ -161,12 +161,12 @@ async def lock_vault(session: AsyncSession, user: User) -> SecuritySettingsRespo
 
 async def record_login(
     session: AsyncSession, user: User, request: Request, location: str | None = None
-) -> None:
+) -> uuid.UUID:
     """Upsert a device session for this browser, then log a sign-in event.
 
-    Each successful password login used to insert a brand-new session row.
-    Logging out only bumped JWT credential_version and left those rows
-    active — so one Chrome tab looked like three "trusted devices".
+    Returns the session id so login/refresh can embed it in JWTs (`sid`).
+    Per-device "Sign out" sets `revoked_at`; auth rejects tokens whose `sid`
+    points at a revoked row.
     """
     device = _device_label_from_request(request)
     user_agent = request.headers.get("user-agent")
@@ -190,8 +190,9 @@ async def record_login(
         # Re-assert current after dedupe (dedupe may have touched flags).
         existing.is_current = True
         await session.flush()
+        device_session = existing
     else:
-        await repository.create_session(
+        device_session = await repository.create_session(
             session,
             user_id=user.id,
             device_label=device,
@@ -209,6 +210,16 @@ async def record_login(
         device_label=device,
         detail="Successful sign-in",
     )
+    return device_session.id
+
+
+async def assert_session_active(
+    session: AsyncSession, user_id: uuid.UUID, session_id: uuid.UUID
+) -> None:
+    """Reject JWTs bound to a missing or revoked trusted-device session."""
+    row = await repository.get_session_by_id(session, session_id, user_id)
+    if row is None or row.revoked_at is not None:
+        raise UnauthorizedError("Session has been signed out")
 
 
 async def record_logout(session: AsyncSession, user: User) -> None:
@@ -246,6 +257,13 @@ async def revoke_session(session: AsyncSession, user_id: uuid.UUID, session_id: 
     if s is None:
         raise NotFoundError("Session not found")
     await repository.revoke_session(session, session_id, user_id)
+    await repository.create_security_event(
+        session,
+        user_id=user_id,
+        event_type="session_revoked",
+        device_label=s.device_label,
+        detail="Signed out remotely from another device",
+    )
 
 
 async def revoke_all_sessions(

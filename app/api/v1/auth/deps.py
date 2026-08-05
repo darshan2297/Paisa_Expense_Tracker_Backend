@@ -4,6 +4,7 @@ depends on) and is re-exported via `app.deps` for a stable import path that
 doesn't require other modules to know it actually lives under `auth`.
 """
 
+import uuid
 from typing import Annotated
 
 import jwt
@@ -24,8 +25,9 @@ async def get_current_user(
     """Decode the bearer access token, verify it hasn't been revoked, and
     return the authenticated `User`. Raises `UnauthorizedError` (-> 401) for
     any failure mode - missing header, malformed/expired/invalid token,
-    wrong token type, unknown/inactive user, or a `credential_version`
-    mismatch (the token predates a password change / logout-everywhere).
+    wrong token type, unknown/inactive user, a `credential_version`
+    mismatch (password change / logout-everywhere), or a revoked device
+    session (`sid` bound to a signed-out trusted device).
     """
     if not authorization or not authorization.startswith("Bearer "):
         raise UnauthorizedError("Missing or malformed Authorization header")
@@ -44,6 +46,19 @@ async def get_current_user(
         raise UnauthorizedError("User not found or inactive")
     if claims.get("cv") != user.credential_version:
         raise UnauthorizedError("Token has been revoked")
+
+    # Every access token must be bound to a trusted-device session. Without
+    # `sid`, Security → Sign out cannot invalidate that client.
+    raw_sid = claims.get("sid")
+    if not (isinstance(raw_sid, str) and raw_sid):
+        raise UnauthorizedError("Session has been signed out")
+    try:
+        session_id = uuid.UUID(raw_sid)
+    except ValueError as exc:
+        raise UnauthorizedError("Invalid or expired token") from exc
+    from app.api.v1.security import service as security_service
+
+    await security_service.assert_session_active(session, user.id, session_id)
 
     return user
 

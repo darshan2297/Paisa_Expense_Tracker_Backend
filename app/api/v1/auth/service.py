@@ -1,5 +1,7 @@
 """Business logic for authentication and profile management."""
 
+import uuid
+
 import jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -34,8 +36,15 @@ def _as_int(value: object) -> int:
     raise TypeError(f"Expected int, got {type(value).__name__}")
 
 
-def _issue_token_pair(user: User) -> TokenPairResponse:
-    extra_claims = {"cv": user.credential_version}
+def _issue_token_pair(user: User, session_id: uuid.UUID | None = None) -> TokenPairResponse:
+    """Issue access + refresh JWTs.
+
+    `sid` binds the pair to a trusted-device row so Security → Sign out can
+    invalidate that device without bumping credential_version for everyone.
+    """
+    extra_claims: dict[str, object] = {"cv": user.credential_version}
+    if session_id is not None:
+        extra_claims["sid"] = str(session_id)
     return TokenPairResponse(
         access_token=create_access_token(str(user.id), extra_claims),
         refresh_token=create_refresh_token(str(user.id), extra_claims),
@@ -65,7 +74,7 @@ def _to_profile_response(user: User, values: dict[str, object]) -> ProfileRespon
 
 async def register(
     session: AsyncSession, email: str, password: str, name: str
-) -> TokenPairResponse:
+) -> User:
     if await repository.count_users(session) > 0:
         raise ConflictError("Registration is closed - an account already exists")
 
@@ -76,17 +85,28 @@ async def register(
         name=name,
     )
     await ensure_default_account(session, user.id)
-    return _issue_token_pair(user)
+    return user
 
 
-async def login(session: AsyncSession, email: str, password: str) -> TokenPairResponse:
+async def login(session: AsyncSession, email: str, password: str) -> User:
     user = await repository.get_by_email(session, email)
     if user is None or not user.is_active or not verify_password(password, user.hashed_password):
         raise UnauthorizedError("Incorrect email or password")
-    return _issue_token_pair(user)
+    return user
 
 
-async def refresh_tokens(session: AsyncSession, refresh_token: str) -> TokenPairResponse:
+async def issue_tokens_for_session(
+    user: User, session_id: uuid.UUID | None
+) -> TokenPairResponse:
+    return _issue_token_pair(user, session_id)
+
+
+async def refresh_tokens(
+    session: AsyncSession,
+    refresh_token: str,
+    *,
+    session_id: uuid.UUID | None = None,
+) -> TokenPairResponse:
     try:
         claims = decode_token(refresh_token)
     except jwt.PyJWTError as exc:
@@ -101,7 +121,24 @@ async def refresh_tokens(session: AsyncSession, refresh_token: str) -> TokenPair
     if claims.get("cv") != user.credential_version:
         raise UnauthorizedError("Token has been revoked")
 
-    return _issue_token_pair(user)
+    bound_sid = session_id
+    raw_sid = claims.get("sid")
+    if bound_sid is None and isinstance(raw_sid, str) and raw_sid:
+        try:
+            bound_sid = uuid.UUID(raw_sid)
+        except ValueError as exc:
+            raise UnauthorizedError("Invalid or expired refresh token") from exc
+
+    # Refresh must stay tied to a device session — otherwise remote "Sign out"
+    # cannot kill the client (and minting a new session here would resurrect it).
+    if bound_sid is None:
+        raise UnauthorizedError("Session has been signed out")
+
+    from app.api.v1.security import service as security_service
+
+    await security_service.assert_session_active(session, user.id, bound_sid)
+
+    return _issue_token_pair(user, bound_sid)
 
 
 async def logout(session: AsyncSession, user: User) -> None:
